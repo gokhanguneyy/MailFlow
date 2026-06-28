@@ -10,6 +10,8 @@ public interface ICompanyRecordService
         string companyEmail,
         string domain);
 
+    // IReadOnlyList olarak tanýmlayarak þunu diyoruz, ben sadece bu listi okuyabilirim,
+    // deðiþtiremem. Normal List'te deðeri manipüle edebiliyoruz.
     Task<IReadOnlyList<CompanyRecord>> GetAllAsync(string? domainSearch = null);
 
     Task<CompanyRecord?> GetLatestAsync();
