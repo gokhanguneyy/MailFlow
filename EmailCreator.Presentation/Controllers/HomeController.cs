@@ -1,37 +1,59 @@
 using System.Diagnostics;
 using System.Net.Mail;
 using Microsoft.AspNetCore.Mvc;
+using EmailCreator.Business.Abstract;
+using EmailCreator.Business.Exceptions;
+using EmailCreator.Business.Models;
 using EmailCreator.Models;
 
 namespace EmailCreator.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly ICompanyRecordService _companyRecordService;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ICompanyRecordService companyRecordService)
     {
-        _logger = logger;
+        _companyRecordService = companyRecordService;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index(string? searchEmail)
     {
-        return View(new CompanyProfileViewModel());
+        return View(await BuildViewModelAsync(new CompanyProfileViewModel
+        {
+            SearchEmail = searchEmail
+        }));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Index(CompanyProfileViewModel model)
+    public async Task<IActionResult> Index(CompanyProfileViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            return View(model);
+            return View(await BuildViewModelAsync(model));
         }
 
-        model.SavedCompanyName = model.CompanyName.Trim();
-        model.SavedDomain = ExtractDomain(model.CompanyEmail);
+        var domain = ExtractDomain(model.CompanyEmail);
 
-        return View(model);
+        try
+        {
+            var savedRecord = await _companyRecordService.AddAsync(
+                model.CompanyName,
+                model.LinkedInUrl,
+                model.CompanyEmail,
+                domain);
+
+            return View(await BuildViewModelAsync(model, savedRecord));
+        }
+        catch (DuplicateCompanyDomainException exception)
+        {
+            ModelState.AddModelError(
+                nameof(model.CompanyEmail),
+                $"{exception.Domain} domaini zaten kayıtlı. Aynı domainle ikinci firma eklenemez.");
+
+            return View(await BuildViewModelAsync(model));
+        }
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -45,5 +67,57 @@ public class HomeController : Controller
         var address = new MailAddress(email);
 
         return address.Host.ToLowerInvariant();
+    }
+
+    private async Task<CompanyProfileViewModel> BuildViewModelAsync(
+        CompanyProfileViewModel model,
+        CompanyRecord? savedRecord = null)
+    {
+        var latestRecord = savedRecord ?? await _companyRecordService.GetLatestAsync();
+
+        if (latestRecord is not null)
+        {
+            model.SavedCompanyName = latestRecord.CompanyName;
+            model.SavedDomain = latestRecord.Domain;
+        }
+
+        string? domainSearch = null;
+        if (!string.IsNullOrWhiteSpace(model.SearchEmail))
+        {
+            domainSearch = ExtractSearchDomain(model.SearchEmail);
+        }
+
+        var records = await _companyRecordService.GetAllAsync(domainSearch);
+
+        model.SavedCompanies = records
+            .Select(ToListItem)
+            .ToList();
+
+        return model;
+    }
+
+    private static CompanyListItemViewModel ToListItem(CompanyRecord record)
+    {
+        return new CompanyListItemViewModel
+        {
+            CompanyName = record.CompanyName,
+            LinkedInUrl = record.LinkedInUrl,
+            CompanyEmail = record.CompanyEmail,
+            Domain = record.Domain,
+            CreatedAt = record.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+        };
+    }
+
+    private static string ExtractSearchDomain(string searchText)
+    {
+        var normalizedSearchText = searchText.Trim();
+        var atSignIndex = normalizedSearchText.LastIndexOf('@');
+
+        if (atSignIndex >= 0 && atSignIndex < normalizedSearchText.Length - 1)
+        {
+            return normalizedSearchText[(atSignIndex + 1)..].Trim();
+        }
+
+        return normalizedSearchText;
     }
 }

@@ -62,6 +62,71 @@
                 }
             </aside>
         </div>
+
+        <section class="company-list-panel">
+            <div class="company-list-heading">
+                <div>
+                    <p class="company-kicker">Kayıt Listesi</p>
+                    <h2>Kaydedilen Firmalar</h2>
+                </div>
+                <div class="company-list-tools">
+                    <form asp-action="Index" method="get" class="company-search-form">
+                        <label class="visually-hidden" for="SearchEmail">Mail domainine göre ara</label>
+                        <input id="SearchEmail"
+                               name="searchEmail"
+                               class="form-control"
+                               type="search"
+                               value="@Model.SearchEmail"
+                               placeholder="Mail veya domain ara" />
+                        <button type="submit" class="btn btn-primary search-button">Ara</button>
+                        @if (Model.IsSearchActive)
+                        {
+                            <a asp-action="Index" class="clear-search-link">Temizle</a>
+                        }
+                    </form>
+                    <span class="record-count">@Model.SavedCompanies.Count kayıt</span>
+                </div>
+            </div>
+
+            @if (Model.HasSavedCompanies)
+            {
+                <div class="company-table-wrap">
+                    <table class="company-table">
+                        <thead>
+                            <tr>
+                                <th>Firma Adı</th>
+                                <th>LinkedIn</th>
+                                <th>Mail</th>
+                                <th>Domain</th>
+                                <th>Kayıt Tarihi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var company in Model.SavedCompanies)
+                            {
+                                <tr>
+                                    <td class="company-name-cell">@company.CompanyName</td>
+                                    <td>
+                                        <a href="@company.LinkedInUrl" target="_blank" rel="noreferrer">
+                                            @company.LinkedInUrl
+                                        </a>
+                                    </td>
+                                    <td>@company.CompanyEmail</td>
+                                    <td>@company.Domain</td>
+                                    <td>@company.CreatedAt</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-company-list">
+                    @(Model.IsSearchActive ? "Bu domain aramasıyla eşleşen kayıt yok." : "Henüz kaydedilmiş firma yok.")
+                </div>
+            }
+        </section>
     </div>
 </section>
 
