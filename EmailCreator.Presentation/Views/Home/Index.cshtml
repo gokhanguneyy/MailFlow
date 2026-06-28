@@ -1,0 +1,70 @@
+@model CompanyProfileViewModel
+
+@{
+    ViewData["Title"] = "Firma Bilgileri";
+}
+
+<section class="company-page">
+    <div class="company-shell">
+        <div class="company-header">
+            <p class="company-kicker">Email Creator</p>
+            <h1>Firma Bilgileri</h1>
+        </div>
+
+        <div class="company-workspace">
+            <form asp-action="Index" method="post" class="company-form">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-field">
+                    <label asp-for="CompanyName"></label>
+                    <input asp-for="CompanyName" class="form-control" placeholder="Örn. Acme Teknoloji" />
+                    <span asp-validation-for="CompanyName" class="text-danger"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="LinkedInUrl"></label>
+                    <input asp-for="LinkedInUrl" class="form-control" placeholder="https://www.linkedin.com/company/acme" />
+                    <span asp-validation-for="LinkedInUrl" class="text-danger"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="CompanyEmail"></label>
+                    <input asp-for="CompanyEmail" class="form-control" placeholder="info@acme.com" />
+                    <span asp-validation-for="CompanyEmail" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary save-button">Kaydet</button>
+            </form>
+
+            <aside class="company-result" aria-live="polite">
+                <div class="result-label">Kaydedilen Firma</div>
+
+                @if (Model.HasSavedCompany)
+                {
+                    <dl class="result-list">
+                        <div>
+                            <dt>Firma Adı</dt>
+                            <dd>@Model.SavedCompanyName</dd>
+                        </div>
+                        <div>
+                            <dt>Domain</dt>
+                            <dd>@Model.SavedDomain</dd>
+                        </div>
+                    </dl>
+                }
+                else
+                {
+                    <div class="empty-result">
+                        <span>Firma adı ve domain bilgisi burada görünecek.</span>
+                    </div>
+                }
+            </aside>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

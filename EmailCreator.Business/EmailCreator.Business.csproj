@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\EmailCreator.DataAccess\EmailCreator.DataAccess.csproj" />
+    <ProjectReference Include="..\EmailCreator.Entities\EmailCreator.Entities.csproj" />
+  </ItemGroup>
+
 </Project>

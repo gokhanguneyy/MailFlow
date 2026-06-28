@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.Mail;
 using Microsoft.AspNetCore.Mvc;
 using EmailCreator.Models;
 
@@ -15,7 +16,22 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        return View();
+        return View(new CompanyProfileViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Index(CompanyProfileViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        model.SavedCompanyName = model.CompanyName.Trim();
+        model.SavedDomain = ExtractDomain(model.CompanyEmail);
+
+        return View(model);
     }
 
     public IActionResult Privacy()
@@ -27,5 +43,12 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    private static string ExtractDomain(string email)
+    {
+        var address = new MailAddress(email);
+
+        return address.Host.ToLowerInvariant();
     }
 }
