@@ -8,16 +8,9 @@ public class CompanyProfileViewModel
 
     public string CompanyEmail { get; set; } = string.Empty;
 
-    public string? SavedCompanyName { get; set; }
-
-    public string? SavedDomain { get; set; }
-
     public string? SearchEmail { get; set; }
 
     public List<CompanyListItemViewModel> SavedCompanies { get; set; } = [];
-
-    public bool HasSavedCompany => !string.IsNullOrWhiteSpace(SavedCompanyName)
-        && !string.IsNullOrWhiteSpace(SavedDomain);
 
     public bool HasSavedCompanies => SavedCompanies.Count > 0;
 

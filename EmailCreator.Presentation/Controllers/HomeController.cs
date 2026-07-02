@@ -54,13 +54,13 @@ public class HomeController : Controller
 
         try
         {
-            var savedRecord = await _companyRecordService.AddAsync(
+            await _companyRecordService.AddAsync(
                 model.CompanyName,
                 model.LinkedInUrl,
                 model.CompanyEmail,
                 domain);
 
-            return View(await BuildViewModelAsync(model, savedRecord));
+            return View(await BuildViewModelAsync(model));
         }
         catch (DuplicateCompanyDomainException exception)
         {
@@ -85,18 +85,8 @@ public class HomeController : Controller
         return address.Host.ToLowerInvariant();
     }
 
-    private async Task<CompanyProfileViewModel> BuildViewModelAsync(
-        CompanyProfileViewModel model,
-        CompanyRecord? savedRecord = null)
+    private async Task<CompanyProfileViewModel> BuildViewModelAsync(CompanyProfileViewModel model)
     {
-        var latestRecord = savedRecord ?? await _companyRecordService.GetLatestAsync();
-
-        if (latestRecord is not null)
-        {
-            model.SavedCompanyName = latestRecord.CompanyName;
-            model.SavedDomain = latestRecord.Domain;
-        }
-
         string? domainSearch = null;
         if (!string.IsNullOrWhiteSpace(model.SearchEmail))
         {

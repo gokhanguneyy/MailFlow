@@ -37,30 +37,6 @@
 
                 <button type="submit" class="btn btn-primary save-button">Kaydet</button>
             </form>
-
-            <aside class="company-result" aria-live="polite">
-                <div class="result-label">Kaydedilen Firma</div>
-
-                @if (Model.HasSavedCompany)
-                {
-                    <dl class="result-list">
-                        <div>
-                            <dt>Firma Adı</dt>
-                            <dd>@Model.SavedCompanyName</dd>
-                        </div>
-                        <div>
-                            <dt>Domain</dt>
-                            <dd>@Model.SavedDomain</dd>
-                        </div>
-                    </dl>
-                }
-                else
-                {
-                    <div class="empty-result">
-                        <span>Firma adı ve domain bilgisi burada görünecek.</span>
-                    </div>
-                }
-            </aside>
         </div>
 
         <section class="company-list-panel">

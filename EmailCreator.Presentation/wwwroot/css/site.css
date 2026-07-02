@@ -61,13 +61,12 @@ body {
 
 .company-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
 }
 
-.company-form,
-.company-result {
+.company-form {
   border: 1px solid #d9e2ee;
   border-radius: 8px;
   background: #ffffff;
@@ -123,64 +122,6 @@ body {
 .save-button:hover,
 .save-button:focus {
   background: #225bd0;
-}
-
-.company-result {
-  display: flex;
-  min-height: 100%;
-  flex-direction: column;
-  justify-content: center;
-  padding: 24px;
-}
-
-.result-label {
-  margin-bottom: 18px;
-  color: #50627a;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.result-list {
-  display: grid;
-  gap: 16px;
-  margin: 0;
-}
-
-.result-list div {
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e6edf5;
-}
-
-.result-list div:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.result-list dt {
-  margin-bottom: 4px;
-  color: #5c6f89;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.result-list dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-  color: #111827;
-  font-size: 1.2rem;
-  font-weight: 750;
-}
-
-.empty-result {
-  display: grid;
-  min-height: 160px;
-  place-items: center;
-  border: 1px dashed #bdcce0;
-  border-radius: 8px;
-  color: #64748b;
-  text-align: center;
 }
 
 .company-list-panel {

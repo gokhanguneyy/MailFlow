@@ -77,14 +77,6 @@ public sealed class EfCoreCompanyRecordService : ICompanyRecordService
             .ToList();
     }
 
-    public async Task<CompanyRecord?> GetLatestAsync()
-    {
-        var company = await _companyRepository.FirstOrDefaultAsync(
-            orderBy: query => query.OrderByDescending(company => company.CreatedAt));
-
-        return company is null ? null : ToRecord(company);
-    }
-
     private static CompanyRecord ToRecord(Company company)
     {
         return new CompanyRecord(
