@@ -224,7 +224,7 @@ body {
 
 .company-table {
   width: 100%;
-  min-width: 920px;
+  min-width: 1040px;
   margin: 0;
   border-collapse: collapse;
   table-layout: fixed;
@@ -270,6 +270,12 @@ body {
 .company-name-cell {
   color: #111827 !important;
   font-weight: 750;
+}
+
+.company-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .delete-company-form {

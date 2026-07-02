@@ -46,9 +46,6 @@
                     <h2>Kaydedilen Firmalar</h2>
                 </div>
                 <div class="company-list-tools">
-                    <button type="button" class="btn btn-outline-primary draft-button" data-draft-button>
-                        Taslak Oluştur
-                    </button>
                     <form asp-action="Index" method="get" class="company-search-form">
                         <label class="visually-hidden" for="SearchEmail">Mail domainine göre ara</label>
                         <input id="SearchEmail"
@@ -94,7 +91,10 @@
                                     <td>@company.CompanyEmail</td>
                                     <td>@company.Domain</td>
                                     <td>@company.CreatedAt</td>
-                                    <td>
+                                    <td class="company-actions-cell">
+                                        <button type="button" class="btn btn-outline-primary draft-button" data-draft-button>
+                                            Taslak Oluştur
+                                        </button>
                                         <form asp-action="Delete" method="post" class="delete-company-form">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="domain" value="@company.Domain" />
@@ -123,8 +123,12 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.querySelector("[data-draft-button]")?.addEventListener("click", () => {
-            alert("Hoş geldiniz");
+        // Taslak butonu her kayit satirinda tekrarlandigi icin tum butonlara click eventi bagliyoruz.
+        // Simdilik is kuralina gitmez; sadece kullaniciya gecici popup mesaji gosterir.
+        document.querySelectorAll("[data-draft-button]").forEach((button) => {
+            button.addEventListener("click", () => {
+                alert("Hoş geldiniz");
+            });
         });
     </script>
 }
