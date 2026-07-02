@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using EmailCreator.Business.Abstract;
 using EmailCreator.Business.Concrete;
+using EmailCreator.Business.Factories;
 using EmailCreator.DataAccess.Contexts;
 using EmailCreator.DataAccess.Repositories;
 
@@ -17,6 +18,7 @@ public static class DependencyInjection
             options.UseSqlServer(connectionString));
 
         services.AddScoped(typeof(IGenericRepository<>), typeof(EfCoreGenericRepository<>));
+        services.AddScoped<ICompanyFactory, CompanyFactory>();
         services.AddScoped<ICompanyRecordService, EfCoreCompanyRecordService>();
 
         return services;

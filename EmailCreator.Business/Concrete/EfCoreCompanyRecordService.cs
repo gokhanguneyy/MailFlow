@@ -10,10 +10,14 @@ namespace EmailCreator.Business.Concrete;
 
 public sealed class EfCoreCompanyRecordService : ICompanyRecordService
 {
+    private readonly ICompanyFactory _companyFactory;
     private readonly IGenericRepository<Company> _companyRepository;
 
-    public EfCoreCompanyRecordService(IGenericRepository<Company> companyRepository)
+    public EfCoreCompanyRecordService(
+        ICompanyFactory companyFactory,
+        IGenericRepository<Company> companyRepository)
     {
+        _companyFactory = companyFactory;
         _companyRepository = companyRepository;
     }
 
@@ -23,24 +27,16 @@ public sealed class EfCoreCompanyRecordService : ICompanyRecordService
         string companyEmail,
         string domain)
     {
-        var normalizedDomain = NormalizeDomain(domain);
+        // Factory pattern burada Company olusturma sorumlulugunu servisten ayirir.
+        // Service sadece is kurali, duplicate kontrolu ve kaydetme akisini yonetir.
+        var company = _companyFactory.CreateCompany(companyName, linkedInUrl, companyEmail, domain);
 
         // Domain primary key olduğu için aynı firmayı ikinci kez eklememeliyiz.
         // Ön kontrol kullanıcıya SQL hatası yerine anlaşılır iş kuralı mesajı döndürmemizi sağlar.
-        if (await _companyRepository.AnyAsync(company => company.Domain == normalizedDomain))
+        if (await _companyRepository.AnyAsync(existingCompany => existingCompany.Domain == company.Domain))
         {
-            throw new DuplicateCompanyDomainException(normalizedDomain);
+            throw new DuplicateCompanyDomainException(company.Domain);
         }
-
-        var company = new Company
-        {
-            Domain = normalizedDomain,
-            CompanyName = companyName.Trim(),
-            LinkedInUrl = linkedInUrl.Trim(),
-            CompanyEmail = companyEmail.Trim(),
-            GenderStatus = GenderStatus.Company,
-            CreatedAt = DateTimeOffset.Now
-        };
 
         await _companyRepository.AddAsync(company);
 
@@ -52,7 +48,7 @@ public sealed class EfCoreCompanyRecordService : ICompanyRecordService
         {
             // Aynı domain eş zamanlı iki istekle gelirse ön kontrol yetmeyebilir.
             // Database primary key hatasını da iş kuralı exception'ına çevirerek UI mesajını koruruz.
-            throw new DuplicateCompanyDomainException(normalizedDomain);
+            throw new DuplicateCompanyDomainException(company.Domain);
         }
 
         return ToRecord(company);
