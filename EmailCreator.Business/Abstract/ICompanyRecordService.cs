@@ -13,4 +13,6 @@ public interface ICompanyRecordService
     // IReadOnlyList kullanarak bu listenin sadece okunmasini sagliyoruz.
     // Boylece presentation katmani gelen koleksiyonu yanlislikla degistiremez.
     Task<IReadOnlyList<CompanyRecord>> GetAllAsync(string? domainSearch = null);
+
+    Task DeleteAsync(string domain);
 }

@@ -23,5 +23,7 @@ public interface IGenericRepository<TEntity>
         bool asNoTracking = true,
         CancellationToken cancellationToken = default);
 
+    void Delete(TEntity entity);
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

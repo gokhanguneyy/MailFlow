@@ -77,6 +77,25 @@ public sealed class EfCoreCompanyRecordService : ICompanyRecordService
             .ToList();
     }
 
+    public async Task DeleteAsync(string domain)
+    {
+        var normalizedDomain = NormalizeDomain(domain);
+
+        // Silme islemi domain primary key uzerinden yapilir.
+        // Entity'yi tracking acik sekilde aliyoruz; boylece repository Remove ettiginde EF Core hangi kaydin silinecegini bilir.
+        var company = await _companyRepository.FirstOrDefaultAsync(
+            company => company.Domain == normalizedDomain,
+            asNoTracking: false);
+
+        if (company is null)
+        {
+            return;
+        }
+
+        _companyRepository.Delete(company);
+        await _companyRepository.SaveChangesAsync();
+    }
+
     private static CompanyRecord ToRecord(Company company)
     {
         return new CompanyRecord(

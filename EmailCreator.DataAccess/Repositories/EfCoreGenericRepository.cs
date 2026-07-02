@@ -50,6 +50,13 @@ public sealed class EfCoreGenericRepository<TEntity> : IGenericRepository<TEntit
         return await query.FirstOrDefaultAsync(cancellationToken);
     }
 
+    public void Delete(TEntity entity)
+    {
+        // Delete islemi icin EF Core'un takip ettigi entity Remove ile silinmek uzere isaretlenir.
+        // Asil SQL DELETE komutu SaveChangesAsync cagrildiginda veritabanina gider.
+        _dbSet.Remove(entity);
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await _dbContext.SaveChangesAsync(cancellationToken);

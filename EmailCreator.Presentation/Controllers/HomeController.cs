@@ -72,6 +72,17 @@ public class HomeController : Controller
         }
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(string domain, string? searchEmail)
+    {
+        // Silme istegi liste satirindan gelir ve domain benzersiz anahtar oldugu icin tek kaydi hedefler.
+        // Islem bittikten sonra kullaniciyi ayni arama filtresiyle listeye geri donduruyoruz.
+        await _companyRecordService.DeleteAsync(domain);
+
+        return RedirectToAction(nameof(Index), new { searchEmail });
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

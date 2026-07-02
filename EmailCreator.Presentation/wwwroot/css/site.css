@@ -167,6 +167,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .company-search-form {
@@ -198,6 +199,13 @@ body {
   background: #225bd0;
 }
 
+.draft-button,
+.delete-button {
+  min-height: 40px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .clear-search-link {
   color: #50627a;
   font-weight: 700;
@@ -216,7 +224,7 @@ body {
 
 .company-table {
   width: 100%;
-  min-width: 840px;
+  min-width: 920px;
   margin: 0;
   border-collapse: collapse;
   table-layout: fixed;
@@ -264,6 +272,10 @@ body {
   font-weight: 750;
 }
 
+.delete-company-form {
+  margin: 0;
+}
+
 .empty-company-list {
   display: grid;
   min-height: 116px;
@@ -305,7 +317,8 @@ body {
   }
 
   .company-search-form .form-control,
-  .search-button {
+  .search-button,
+  .draft-button {
     width: 100%;
   }
 

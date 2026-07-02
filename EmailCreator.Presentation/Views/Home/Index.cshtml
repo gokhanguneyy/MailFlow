@@ -46,6 +46,9 @@
                     <h2>Kaydedilen Firmalar</h2>
                 </div>
                 <div class="company-list-tools">
+                    <button type="button" class="btn btn-outline-primary draft-button" data-draft-button>
+                        Taslak Oluştur
+                    </button>
                     <form asp-action="Index" method="get" class="company-search-form">
                         <label class="visually-hidden" for="SearchEmail">Mail domainine göre ara</label>
                         <input id="SearchEmail"
@@ -75,6 +78,7 @@
                                 <th>Mail</th>
                                 <th>Domain</th>
                                 <th>Kayıt Tarihi</th>
+                                <th>İşlem</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -90,6 +94,16 @@
                                     <td>@company.CompanyEmail</td>
                                     <td>@company.Domain</td>
                                     <td>@company.CreatedAt</td>
+                                    <td>
+                                        <form asp-action="Delete" method="post" class="delete-company-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="domain" value="@company.Domain" />
+                                            <input type="hidden" name="searchEmail" value="@Model.SearchEmail" />
+                                            <button type="submit" class="btn btn-outline-danger delete-button">
+                                                Sil
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -108,4 +122,9 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelector("[data-draft-button]")?.addEventListener("click", () => {
+            alert("Hoş geldiniz");
+        });
+    </script>
 }
