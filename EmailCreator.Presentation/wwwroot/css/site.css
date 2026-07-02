@@ -75,9 +75,9 @@ body {
 
 .company-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 18px 16px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
   padding: 24px;
 }
 
@@ -109,9 +109,10 @@ body {
 }
 
 .save-button {
-  grid-column: 2;
-  grid-row: 1 / span 3;
-  align-self: center;
+  /* Kaydet butonu inputlarin yaninda degil, form alanlarinin altinda durur. */
+  grid-column: 1;
+  grid-row: auto;
+  justify-self: start;
   min-width: 116px;
   min-height: 46px;
   border: 0;
