@@ -1,9 +1,17 @@
+using FluentValidation;
 using EmailCreator.Business;
+using EmailCreator.Models;
+using EmailCreator.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// MVC, non-nullable string alanlari otomatik Required gibi yorumlayabilir.
+// Dogrulama kurallarini tek noktada tutmak icin bu davranisi kapatip FluentValidation'i ana kaynak yapiyoruz.
+builder.Services.AddControllersWithViews(options =>
+{
+    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+});
+builder.Services.AddScoped<IValidator<CompanyProfileViewModel>, CompanyProfileViewModelValidator>();
 builder.Services.AddEmailCreatorBusiness(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("DefaultConnection connection string is missing."));

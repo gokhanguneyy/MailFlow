@@ -18,20 +18,20 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                 <div class="form-field">
-                    <label asp-for="CompanyName"></label>
+                    <label asp-for="CompanyName">Firma Adı</label>
                     <input asp-for="CompanyName" class="form-control" placeholder="Örn. Acme Teknoloji" />
                     <span asp-validation-for="CompanyName" class="text-danger"></span>
                 </div>
 
                 <div class="form-field">
-                    <label asp-for="LinkedInUrl"></label>
+                    <label asp-for="LinkedInUrl">Firma LinkedIn Hesabı</label>
                     <input asp-for="LinkedInUrl" class="form-control" placeholder="https://www.linkedin.com/company/acme" />
                     <span asp-validation-for="LinkedInUrl" class="text-danger"></span>
                 </div>
 
                 <div class="form-field">
-                    <label asp-for="CompanyEmail"></label>
-                    <input asp-for="CompanyEmail" class="form-control" placeholder="info@acme.com" />
+                    <label asp-for="CompanyEmail">Firma Maili</label>
+                    <input asp-for="CompanyEmail" class="form-control" type="email" placeholder="info@acme.com" />
                     <span asp-validation-for="CompanyEmail" class="text-danger"></span>
                 </div>
 

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net.Mail;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using EmailCreator.Business.Abstract;
 using EmailCreator.Business.Exceptions;
@@ -11,10 +12,14 @@ namespace EmailCreator.Controllers;
 public class HomeController : Controller
 {
     private readonly ICompanyRecordService _companyRecordService;
+    private readonly IValidator<CompanyProfileViewModel> _companyProfileValidator;
 
-    public HomeController(ICompanyRecordService companyRecordService)
+    public HomeController(
+        ICompanyRecordService companyRecordService,
+        IValidator<CompanyProfileViewModel> companyProfileValidator)
     {
         _companyRecordService = companyRecordService;
+        _companyProfileValidator = companyProfileValidator;
     }
 
     public async Task<IActionResult> Index(string? searchEmail)
@@ -29,8 +34,19 @@ public class HomeController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(CompanyProfileViewModel model)
     {
-        if (!ModelState.IsValid)
+        var validationResult = await _companyProfileValidator.ValidateAsync(model);
+
+        if (!validationResult.IsValid)
         {
+            ModelState.Clear();
+
+            // FluentValidation sonuçlarını ModelState'e taşıyoruz.
+            // Razor'daki asp-validation-for alanları ModelState'i okuduğu için mevcut hata gösterim yapısı korunur.
+            foreach (var error in validationResult.Errors)
+            {
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            }
+
             return View(await BuildViewModelAsync(model));
         }
 

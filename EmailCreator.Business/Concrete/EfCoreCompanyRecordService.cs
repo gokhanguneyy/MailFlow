@@ -1,19 +1,20 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using EmailCreator.Business.Abstract;
 using EmailCreator.Business.Exceptions;
 using EmailCreator.Business.Models;
-using EmailCreator.DataAccess.Contexts;
+using EmailCreator.DataAccess.Repositories;
 using EmailCreator.Entities;
 
 namespace EmailCreator.Business.Concrete;
 
 public sealed class EfCoreCompanyRecordService : ICompanyRecordService
 {
-    private readonly EmailCreatorDbContext _dbContext;
+    private readonly IGenericRepository<Company> _companyRepository;
 
-    public EfCoreCompanyRecordService(EmailCreatorDbContext dbContext)
+    public EfCoreCompanyRecordService(IGenericRepository<Company> companyRepository)
     {
-        _dbContext = dbContext;
+        _companyRepository = companyRepository;
     }
 
     public async Task<CompanyRecord> AddAsync(
@@ -24,7 +25,9 @@ public sealed class EfCoreCompanyRecordService : ICompanyRecordService
     {
         var normalizedDomain = NormalizeDomain(domain);
 
-        if (await _dbContext.Companies.AnyAsync(company => company.Domain == normalizedDomain))
+        // Domain primary key olduğu için aynı firmayı ikinci kez eklememeliyiz.
+        // Ön kontrol kullanıcıya SQL hatası yerine anlaşılır iş kuralı mesajı döndürmemizi sağlar.
+        if (await _companyRepository.AnyAsync(company => company.Domain == normalizedDomain))
         {
             throw new DuplicateCompanyDomainException(normalizedDomain);
         }
@@ -39,14 +42,16 @@ public sealed class EfCoreCompanyRecordService : ICompanyRecordService
             CreatedAt = DateTimeOffset.Now
         };
 
-        _dbContext.Companies.Add(company);
+        await _companyRepository.AddAsync(company);
 
         try
         {
-            await _dbContext.SaveChangesAsync();
+            await _companyRepository.SaveChangesAsync();
         }
         catch (DbUpdateException)
         {
+            // Aynı domain eş zamanlı iki istekle gelirse ön kontrol yetmeyebilir.
+            // Database primary key hatasını da iş kuralı exception'ına çevirerek UI mesajını koruruz.
             throw new DuplicateCompanyDomainException(normalizedDomain);
         }
 
@@ -55,30 +60,31 @@ public sealed class EfCoreCompanyRecordService : ICompanyRecordService
 
     public async Task<IReadOnlyList<CompanyRecord>> GetAllAsync(string? domainSearch = null)
     {
-        var query = _dbContext.Companies
-            .AsNoTracking()
-            .AsQueryable();
-
+        Expression<Func<Company, bool>>? filter = null;
         if (!string.IsNullOrWhiteSpace(domainSearch))
         {
             var normalizedDomainSearch = NormalizeDomain(domainSearch);
 
-            query = query.Where(company => company.Domain.Contains(normalizedDomainSearch));
+            // Search mailin tamamından değil domain parçasından çalışır.
+            // Böylece gokhan@fair.com araması info@fair.com kaydını da bulur.
+            filter = company => company.Domain.Contains(normalizedDomainSearch);
         }
 
-        return await query
-            .OrderByDescending(company => company.CreatedAt)
-            .ThenBy(company => company.Domain)
+        var companies = await _companyRepository.ListAsync(
+            filter,
+            query => query
+                .OrderByDescending(company => company.CreatedAt)
+                .ThenBy(company => company.Domain));
+
+        return companies
             .Select(company => ToRecord(company))
-            .ToListAsync();
+            .ToList();
     }
 
     public async Task<CompanyRecord?> GetLatestAsync()
     {
-        var company = await _dbContext.Companies
-            .AsNoTracking()
-            .OrderByDescending(company => company.CreatedAt)
-            .FirstOrDefaultAsync();
+        var company = await _companyRepository.FirstOrDefaultAsync(
+            orderBy: query => query.OrderByDescending(company => company.CreatedAt));
 
         return company is null ? null : ToRecord(company);
     }
