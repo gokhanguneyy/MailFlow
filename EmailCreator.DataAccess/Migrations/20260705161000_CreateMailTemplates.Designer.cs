@@ -2,6 +2,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using EmailCreator.DataAccess.Contexts;
 
@@ -10,9 +11,10 @@ using EmailCreator.DataAccess.Contexts;
 namespace EmailCreator.DataAccess.Migrations;
 
 [DbContext(typeof(EmailCreatorDbContext))]
-partial class EmailCreatorDbContextModelSnapshot : ModelSnapshot
+[Migration("20260705161000_CreateMailTemplates")]
+partial class CreateMailTemplates
 {
-    protected override void BuildModel(ModelBuilder modelBuilder)
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder

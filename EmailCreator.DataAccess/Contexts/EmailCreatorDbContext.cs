@@ -12,6 +12,8 @@ public class EmailCreatorDbContext : DbContext
 
     public DbSet<Company> Companies => Set<Company>();
 
+    public DbSet<MailTemplate> MailTemplates => Set<MailTemplate>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Company>(entity =>
@@ -45,6 +47,48 @@ public class EmailCreatorDbContext : DbContext
                 .IsRequired();
 
             entity.HasIndex(company => company.CompanyEmail);
+        });
+
+        modelBuilder.Entity<MailTemplate>(entity =>
+        {
+            entity.ToTable("MailTemplates");
+
+            entity.HasKey(document => document.Id);
+
+            entity.Property(document => document.Title)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(document => document.Subject)
+                .HasMaxLength(300)
+                .IsRequired();
+
+            entity.Property(document => document.Body)
+                .IsRequired();
+
+            entity.Property(document => document.PdfOriginalFileName)
+                .HasMaxLength(260)
+                .IsRequired();
+
+            entity.Property(document => document.PdfStoredFileName)
+                .HasMaxLength(260)
+                .IsRequired();
+
+            entity.Property(document => document.PdfStoragePath)
+                .HasMaxLength(500)
+                .IsRequired();
+
+            entity.Property(document => document.PdfFileSize)
+                .IsRequired();
+
+            entity.Property(document => document.CreatedAt)
+                .IsRequired();
+
+            entity.Property(document => document.UpdatedAt)
+                .IsRequired();
+
+            entity.HasIndex(document => document.Title);
+            entity.HasIndex(document => document.CreatedAt);
         });
     }
 }

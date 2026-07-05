@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Net.Mail;
 using FluentValidation;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using EmailCreator.Business.Abstract;
 using EmailCreator.Business.Exceptions;
@@ -13,13 +15,25 @@ public class HomeController : Controller
 {
     private readonly ICompanyRecordService _companyRecordService;
     private readonly IValidator<CompanyProfileViewModel> _companyProfileValidator;
+    private readonly IMailTemplateService _mailTemplateService;
+    private readonly IValidator<MailTemplateViewModel> _mailTemplateValidator;
+    private readonly IValidator<MailTemplateUpdateViewModel> _mailTemplateUpdateValidator;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
     public HomeController(
         ICompanyRecordService companyRecordService,
-        IValidator<CompanyProfileViewModel> companyProfileValidator)
+        IValidator<CompanyProfileViewModel> companyProfileValidator,
+        IMailTemplateService mailTemplateService,
+        IValidator<MailTemplateViewModel> mailTemplateValidator,
+        IValidator<MailTemplateUpdateViewModel> mailTemplateUpdateValidator,
+        IWebHostEnvironment webHostEnvironment)
     {
         _companyRecordService = companyRecordService;
         _companyProfileValidator = companyProfileValidator;
+        _mailTemplateService = mailTemplateService;
+        _mailTemplateValidator = mailTemplateValidator;
+        _mailTemplateUpdateValidator = mailTemplateUpdateValidator;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     public async Task<IActionResult> Index(string? searchEmail)
@@ -40,8 +54,8 @@ public class HomeController : Controller
         {
             ModelState.Clear();
 
-            // FluentValidation sonuçlarını ModelState'e taşıyoruz.
-            // Razor'daki asp-validation-for alanları ModelState'i okuduğu için mevcut hata gösterim yapısı korunur.
+            // FluentValidation sonuclarini ModelState'e tasiyoruz.
+            // Razor'daki asp-validation-for alanlari ModelState'i okudugu icin mevcut hata gosterim yapisi korunur.
             foreach (var error in validationResult.Errors)
             {
                 ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
@@ -66,7 +80,7 @@ public class HomeController : Controller
         {
             ModelState.AddModelError(
                 nameof(model.CompanyEmail),
-                $"{exception.Domain} domaini zaten kayıtlı. Aynı domainle ikinci firma eklenemez.");
+                $"{exception.Domain} domaini zaten kayitli. Ayni domainle ikinci firma eklenemez.");
 
             return View(await BuildViewModelAsync(model));
         }
@@ -81,6 +95,155 @@ public class HomeController : Controller
         await _companyRecordService.DeleteAsync(domain);
 
         return RedirectToAction(nameof(Index), new { searchEmail });
+    }
+
+    public async Task<IActionResult> MailSablonu()
+    {
+        return View(await BuildMailTemplateViewModelAsync(new MailTemplateViewModel
+        {
+            SuccessMessage = TempData["MailTemplateSuccessMessage"] as string,
+            ErrorMessage = TempData["MailTemplateErrorMessage"] as string
+        }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MailSablonu(MailTemplateViewModel model)
+    {
+        var validationResult = await _mailTemplateValidator.ValidateAsync(model);
+
+        if (!validationResult.IsValid)
+        {
+            ModelState.Clear();
+
+            foreach (var error in validationResult.Errors)
+            {
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            }
+
+            return View(await BuildMailTemplateViewModelAsync(model));
+        }
+
+        SavedPdfFile? savedPdfFile = null;
+
+        try
+        {
+            savedPdfFile = await SavePdfFileAsync(model.PdfFile!);
+
+            await _mailTemplateService.AddAsync(
+                model.Title,
+                model.Subject,
+                model.Body,
+                savedPdfFile.OriginalFileName,
+                savedPdfFile.StoredFileName,
+                savedPdfFile.RelativePath,
+                savedPdfFile.FileSize);
+
+            TempData["MailTemplateSuccessMessage"] = "Kayit basariyla olusturuldu.";
+
+            return RedirectToAction(nameof(MailSablonu));
+        }
+        catch
+        {
+            if (savedPdfFile is not null && System.IO.File.Exists(savedPdfFile.FullPath))
+            {
+                System.IO.File.Delete(savedPdfFile.FullPath);
+            }
+
+            throw;
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GuncelleMailTemplate(MailTemplateUpdateViewModel model)
+    {
+        var validationResult = await _mailTemplateUpdateValidator.ValidateAsync(model);
+
+        if (!validationResult.IsValid)
+        {
+            TempData["MailTemplateErrorMessage"] = string.Join(" ", validationResult.Errors.Select(error => error.ErrorMessage));
+
+            return RedirectToAction(nameof(MailSablonu));
+        }
+
+        var existingTemplate = await _mailTemplateService.GetByIdAsync(model.Id);
+        if (existingTemplate is null)
+        {
+            TempData["MailTemplateErrorMessage"] = "Guncellenecek mail sablonu bulunamadi.";
+
+            return RedirectToAction(nameof(MailSablonu));
+        }
+
+        SavedPdfFile? savedPdfFile = null;
+
+        try
+        {
+            if (model.PdfFile is not null)
+            {
+                savedPdfFile = await SavePdfFileAsync(model.PdfFile);
+            }
+
+            var updatedTemplate = await _mailTemplateService.UpdateAsync(
+                model.Id,
+                model.Title,
+                model.Subject,
+                model.Body,
+                savedPdfFile?.OriginalFileName,
+                savedPdfFile?.StoredFileName,
+                savedPdfFile?.RelativePath,
+                savedPdfFile?.FileSize);
+
+            if (updatedTemplate is null)
+            {
+                if (savedPdfFile is not null && System.IO.File.Exists(savedPdfFile.FullPath))
+                {
+                    System.IO.File.Delete(savedPdfFile.FullPath);
+                }
+
+                TempData["MailTemplateErrorMessage"] = "Guncellenecek mail sablonu bulunamadi.";
+
+                return RedirectToAction(nameof(MailSablonu));
+            }
+
+            if (savedPdfFile is not null)
+            {
+                DeleteStoredFileIfExists(existingTemplate.PdfStoragePath);
+            }
+
+            TempData["MailTemplateSuccessMessage"] = "Mail sablonu guncellendi.";
+
+            return RedirectToAction(nameof(MailSablonu));
+        }
+        catch
+        {
+            if (savedPdfFile is not null && System.IO.File.Exists(savedPdfFile.FullPath))
+            {
+                System.IO.File.Delete(savedPdfFile.FullPath);
+            }
+
+            throw;
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteMailTemplate(int id)
+    {
+        var deletedTemplate = await _mailTemplateService.DeleteAsync(id);
+
+        if (deletedTemplate is null)
+        {
+            TempData["MailTemplateErrorMessage"] = "Silinecek mail sablonu bulunamadi.";
+
+            return RedirectToAction(nameof(MailSablonu));
+        }
+
+        DeleteStoredFileIfExists(deletedTemplate.PdfStoragePath);
+
+        TempData["MailTemplateSuccessMessage"] = "Mail sablonu silindi.";
+
+        return RedirectToAction(nameof(MailSablonu));
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -113,6 +276,17 @@ public class HomeController : Controller
         return model;
     }
 
+    private async Task<MailTemplateViewModel> BuildMailTemplateViewModelAsync(MailTemplateViewModel model)
+    {
+        var mailTemplates = await _mailTemplateService.GetAllAsync();
+
+        model.SavedTemplates = mailTemplates
+            .Select(ToMailTemplateListItem)
+            .ToList();
+
+        return model;
+    }
+
     private static CompanyListItemViewModel ToListItem(CompanyRecord record)
     {
         return new CompanyListItemViewModel
@@ -123,6 +297,80 @@ public class HomeController : Controller
             Domain = record.Domain,
             CreatedAt = record.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
         };
+    }
+
+    private static MailTemplateListItemViewModel ToMailTemplateListItem(MailTemplateRecord record)
+    {
+        return new MailTemplateListItemViewModel
+        {
+            Id = record.Id,
+            Title = record.Title,
+            Subject = record.Subject,
+            Body = record.Body,
+            PdfOriginalFileName = record.PdfOriginalFileName,
+            PdfStoragePath = record.PdfStoragePath,
+            PdfFileSize = FormatFileSize(record.PdfFileSize),
+            CreatedAt = record.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
+            UpdatedAt = record.UpdatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+        };
+    }
+
+    private async Task<SavedPdfFile> SavePdfFileAsync(IFormFile pdfFile)
+    {
+        var uploadsDirectory = Path.Combine(GetWebRootPath(), "uploads", "mail-sablonu");
+        Directory.CreateDirectory(uploadsDirectory);
+
+        var originalFileName = Path.GetFileName(pdfFile.FileName);
+        var storedFileName = $"{Guid.NewGuid():N}.pdf";
+        var fullPath = Path.Combine(uploadsDirectory, storedFileName);
+
+        await using var fileStream = System.IO.File.Create(fullPath);
+        await pdfFile.CopyToAsync(fileStream);
+
+        return new SavedPdfFile(
+            originalFileName,
+            storedFileName,
+            $"/uploads/mail-sablonu/{storedFileName}",
+            fullPath,
+            pdfFile.Length);
+    }
+
+    private string GetWebRootPath()
+    {
+        return _webHostEnvironment.WebRootPath
+            ?? Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
+    }
+
+    private void DeleteStoredFileIfExists(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return;
+        }
+
+        var webRootPath = Path.GetFullPath(GetWebRootPath());
+        var normalizedRelativePath = relativePath.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(webRootPath, normalizedRelativePath));
+
+        if (!fullPath.StartsWith(webRootPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (System.IO.File.Exists(fullPath))
+        {
+            System.IO.File.Delete(fullPath);
+        }
+    }
+
+    private static string FormatFileSize(long fileSize)
+    {
+        if (fileSize >= 1024 * 1024)
+        {
+            return $"{fileSize / 1024d / 1024d:0.##} MB";
+        }
+
+        return $"{fileSize / 1024d:0.##} KB";
     }
 
     private static string ExtractSearchDomain(string searchText)
@@ -137,4 +385,11 @@ public class HomeController : Controller
 
         return normalizedSearchText;
     }
+
+    private sealed record SavedPdfFile(
+        string OriginalFileName,
+        string StoredFileName,
+        string RelativePath,
+        string FullPath,
+        long FileSize);
 }

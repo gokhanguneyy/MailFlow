@@ -28,7 +28,17 @@ body {
   margin-bottom: 0 !important;
 }
 
+.app-container-fluid {
+  --bs-gutter-x: 1rem;
+  max-width: 1280px;
+}
+
 .company-page {
+  min-height: calc(100vh - 148px);
+  padding: 48px 0 64px;
+}
+
+.mail-template-page {
   min-height: calc(100vh - 148px);
   padding: 48px 0 64px;
 }
@@ -36,6 +46,10 @@ body {
 .company-shell {
   width: min(1040px, 100%);
   margin: 0 auto;
+}
+
+.mail-template-page .company-shell {
+  width: min(1200px, 100%);
 }
 
 .company-header {
@@ -79,6 +93,20 @@ body {
   gap: 18px;
   align-items: start;
   padding: 24px;
+}
+
+.mail-template-page .company-form {
+  padding: 18px;
+}
+
+.mail-template-alert {
+  margin-bottom: 16px;
+  border-radius: 8px;
+}
+
+.mail-template-textarea {
+  min-height: 150px;
+  resize: vertical;
 }
 
 .form-field {
@@ -140,6 +168,10 @@ body {
   gap: 16px;
   padding: 22px 24px;
   border-bottom: 1px solid #e6edf5;
+}
+
+.mail-template-page .company-list-heading {
+  padding: 18px;
 }
 
 .company-list-heading .company-kicker {
@@ -231,6 +263,37 @@ body {
   table-layout: fixed;
 }
 
+.mail-template-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.mail-template-table-wrap {
+  overflow-x: visible;
+}
+
+.company-table.mail-template-table th,
+.company-table.mail-template-table td {
+  padding: 12px 10px;
+}
+
+.mail-template-table th:nth-child(1),
+.mail-template-table td:nth-child(1) {
+  width: 28%;
+}
+
+.mail-template-table th:nth-child(2),
+.mail-template-table td:nth-child(2),
+.mail-template-table th:nth-child(3),
+.mail-template-table td:nth-child(3) {
+  width: 18%;
+}
+
+.mail-template-table th:nth-child(4),
+.mail-template-table td:nth-child(4) {
+  width: 36%;
+}
+
 .company-table th,
 .company-table td {
   padding: 16px 18px;
@@ -279,6 +342,21 @@ body {
   gap: 8px;
 }
 
+.mail-template-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mail-template-action-button {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: normal;
+}
+
 .delete-company-form {
   margin: 0;
 }
@@ -292,9 +370,67 @@ body {
   text-align: center;
 }
 
+.empty-table-cell {
+  color: #64748b !important;
+  padding: 28px 18px !important;
+  text-align: center !important;
+}
+
+.mail-template-detail-list {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 20px;
+}
+
+.mail-template-detail-list div {
+  display: grid;
+  gap: 4px;
+}
+
+.mail-template-detail-list dt {
+  color: #50627a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mail-template-detail-list dd {
+  margin: 0;
+  color: #26364c;
+}
+
+.mail-template-body-preview {
+  max-height: 180px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.mail-template-pdf-preview {
+  border: 1px solid #d9e2ee;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fbff;
+}
+
+.mail-template-pdf-preview iframe {
+  display: block;
+  width: 100%;
+  height: min(64vh, 680px);
+  border: 0;
+}
+
+.modal-body .form-field + .form-field {
+  margin-top: 16px;
+}
+
 @media (max-width: 840px) {
-  .company-page {
+  .company-page,
+  .mail-template-page {
     padding: 32px 0 48px;
+  }
+
+  .app-container-fluid {
+    --bs-gutter-x: 0.75rem;
   }
 
   .company-workspace {
@@ -303,6 +439,11 @@ body {
 
   .company-form {
     grid-template-columns: 1fr;
+  }
+
+  .mail-template-page .company-form,
+  .mail-template-page .company-list-heading {
+    padding: 16px;
   }
 
   .save-button {
@@ -331,5 +472,72 @@ body {
 
   .record-count {
     width: fit-content;
+  }
+
+  .mail-template-table {
+    min-width: 0;
+  }
+
+  .mail-template-table thead {
+    display: none;
+  }
+
+  .mail-template-table,
+  .mail-template-table tbody,
+  .mail-template-table tr,
+  .mail-template-table td {
+    display: block;
+    width: 100% !important;
+  }
+
+  .mail-template-table tr {
+    border-bottom: 1px solid #e6edf5;
+    padding: 12px 0;
+  }
+
+  .mail-template-table tr:last-child {
+    border-bottom: 0;
+  }
+
+  .mail-template-table td {
+    display: grid;
+    grid-template-columns: minmax(110px, 36%) minmax(0, 1fr);
+    gap: 10px;
+    border-bottom: 0;
+    padding: 8px 14px;
+  }
+
+  .mail-template-table td::before {
+    content: attr(data-label);
+    color: #50627a;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .mail-template-actions-cell {
+    display: flex !important;
+    justify-content: flex-start;
+  }
+
+  .mail-template-actions-cell::before {
+    content: "\0130\015Flem";
+    flex: 0 0 100%;
+    color: #50627a;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .mail-template-action-button {
+    flex: 1 1 120px;
+  }
+
+  .empty-table-cell {
+    display: block !important;
+  }
+
+  .empty-table-cell::before {
+    content: "";
   }
 }

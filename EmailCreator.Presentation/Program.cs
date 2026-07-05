@@ -12,6 +12,8 @@ builder.Services.AddControllersWithViews(options =>
     options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
 });
 builder.Services.AddScoped<IValidator<CompanyProfileViewModel>, CompanyProfileViewModelValidator>();
+builder.Services.AddScoped<IValidator<MailTemplateViewModel>, MailTemplateViewModelValidator>();
+builder.Services.AddScoped<IValidator<MailTemplateUpdateViewModel>, MailTemplateUpdateViewModelValidator>();
 builder.Services.AddEmailCreatorBusiness(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("DefaultConnection connection string is missing."));

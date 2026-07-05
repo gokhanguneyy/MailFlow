@@ -1,0 +1,222 @@
+@model MailTemplateViewModel
+
+@{
+    ViewData["Title"] = "Mail Şablonu";
+    ViewData["UseFluidContainer"] = true;
+}
+
+<section class="mail-template-page">
+    <div class="company-shell">
+        <div class="company-header">
+            <p class="company-kicker">Mail Şablonu</p>
+            <h1>Mail Şablonu</h1>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+        {
+            <div class="alert alert-success mail-template-alert" role="alert">
+                @Model.SuccessMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger mail-template-alert" role="alert">
+                @Model.ErrorMessage
+            </div>
+        }
+
+        <div class="company-workspace">
+            <form asp-action="MailSablonu" method="post" enctype="multipart/form-data" class="company-form mail-template-form">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-field">
+                    <label asp-for="Title">Title</label>
+                    <input asp-for="Title" class="form-control" placeholder="Örn. Tanışma Maili" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Subject">Konu</label>
+                    <input asp-for="Subject" class="form-control" placeholder="Örn. Yeni iş birliği fırsatı" />
+                    <span asp-validation-for="Subject" class="text-danger"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Body">Metin</label>
+                    <textarea asp-for="Body" class="form-control mail-template-textarea" placeholder="Metni buraya girin"></textarea>
+                    <span asp-validation-for="Body" class="text-danger"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="PdfFile">PDF</label>
+                    <input asp-for="PdfFile" class="form-control" type="file" accept="application/pdf,.pdf" />
+                    <span asp-validation-for="PdfFile" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary save-button">Kaydet</button>
+            </form>
+        </div>
+
+        <section class="company-list-panel">
+            <div class="company-list-heading">
+                <div>
+                    <p class="company-kicker">Kayıt Listesi</p>
+                    <h2>Kaydedilen Mail Şablonları</h2>
+                </div>
+                <span class="record-count">@Model.SavedTemplates.Count kayıt</span>
+            </div>
+
+            <div class="company-table-wrap mail-template-table-wrap">
+                <table class="company-table mail-template-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>Son Güncellenme</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.HasSavedTemplates)
+                        {
+                            @foreach (var template in Model.SavedTemplates)
+                            {
+                                <tr>
+                                    <td class="company-name-cell" data-label="Title">@template.Title</td>
+                                    <td data-label="Kayıt Tarihi">@template.CreatedAt</td>
+                                    <td data-label="Son Güncellenme">@template.UpdatedAt</td>
+                                    <td class="mail-template-actions-cell">
+                                        <button type="button"
+                                                class="btn btn-outline-primary mail-template-action-button"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#mailTemplateDetails-@template.Id">
+                                            Detayları Göster
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-outline-secondary mail-template-action-button"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#mailTemplateGuncelle-@template.Id">
+                                            Güncelle
+                                        </button>
+                                        <form asp-action="DeleteMailTemplate" method="post" class="delete-company-form" onsubmit="return confirm('Bu mail şablonunu silmek istiyor musunuz?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@template.Id" />
+                                            <button type="submit" class="btn btn-outline-danger mail-template-action-button">
+                                                Sil
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="empty-table-cell">
+                                    Henüz kaydedilmiş mail şablonu yok.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        @foreach (var template in Model.SavedTemplates)
+        {
+            <div class="modal fade" id="mailTemplateDetails-@template.Id" tabindex="-1" aria-labelledby="mailTemplateDetailsLabel-@template.Id" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title fs-5" id="mailTemplateDetailsLabel-@template.Id">@template.Title</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                        </div>
+                        <div class="modal-body">
+                            <dl class="mail-template-detail-list">
+                                <div>
+                                    <dt>Konu</dt>
+                                    <dd>@template.Subject</dd>
+                                </div>
+                                <div>
+                                    <dt>Metin</dt>
+                                    <dd class="mail-template-body-preview">@template.Body</dd>
+                                </div>
+                                <div>
+                                    <dt>PDF/CV</dt>
+                                    <dd>
+                                        <a href="@template.PdfStoragePath" target="_blank" rel="noreferrer">@template.PdfOriginalFileName</a>
+                                        <span class="text-muted">(@template.PdfFileSize)</span>
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Kayıt Tarihi</dt>
+                                    <dd>@template.CreatedAt</dd>
+                                </div>
+                                <div>
+                                    <dt>Son Güncellenme</dt>
+                                    <dd>@template.UpdatedAt</dd>
+                                </div>
+                            </dl>
+
+                            <div class="mail-template-pdf-preview">
+                                <iframe src="@template.PdfStoragePath" title="@template.Title PDF önizleme"></iframe>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="mailTemplateGuncelle-@template.Id" tabindex="-1" aria-labelledby="mailTemplateGuncelleLabel-@template.Id" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <form asp-action="GuncelleMailTemplate" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="Id" value="@template.Id" />
+
+                            <div class="modal-header">
+                                <h2 class="modal-title fs-5" id="mailTemplateGuncelleLabel-@template.Id">Mail Şablonunu Güncelle</h2>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-field">
+                                    <label for="GuncelleTitle-@template.Id">Title</label>
+                                    <input id="GuncelleTitle-@template.Id" name="Title" class="form-control" value="@template.Title" />
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="GuncelleSubject-@template.Id">Konu</label>
+                                    <input id="GuncelleSubject-@template.Id" name="Subject" class="form-control" value="@template.Subject" />
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="GuncelleBody-@template.Id">Metin</label>
+                                    <textarea id="GuncelleBody-@template.Id" name="Body" class="form-control mail-template-textarea">@template.Body</textarea>
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="GuncellePdfFile-@template.Id">PDF/CV Dosyasını Değiştir</label>
+                                    <input id="GuncellePdfFile-@template.Id" name="PdfFile" class="form-control" type="file" accept="application/pdf,.pdf" />
+                                    <div class="form-text">Mevcut dosya: @template.PdfOriginalFileName</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                                <button type="submit" class="btn btn-primary">Güncelle</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
