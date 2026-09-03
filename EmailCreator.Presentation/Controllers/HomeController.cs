@@ -216,6 +216,18 @@ public class HomeController : Controller
 
             return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
         }
+        catch (IOException)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Mail şablonuna bağlı PDF okunamadı. PDF dosyasını kontrol edin.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+        catch (InvalidOperationException)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Mail şablonuna bağlı PDF hazırlanamadı. Şablon PDF kaydını kontrol edin.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
 
         if (string.IsNullOrWhiteSpace(gmailDraft.DraftId))
         {
