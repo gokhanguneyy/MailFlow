@@ -179,6 +179,50 @@ body {
   padding: 18px;
 }
 
+.draft-control-panel {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.draft-gmail-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.draft-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.draft-status-ready {
+  background: #eaf7ef;
+  color: #167543;
+}
+
+.draft-status-warning {
+  background: #fff5df;
+  color: #8a5a00;
+}
+
+.draft-connect-button {
+  min-height: 40px;
+  border: 0;
+  background: #2f6fed;
+  font-weight: 700;
+}
+
+.draft-connect-button:hover,
+.draft-connect-button:focus {
+  background: #225bd0;
+}
+
 .draft-split-list {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -217,6 +261,36 @@ body {
   font-size: 1.25rem;
   font-weight: 750;
   letter-spacing: 0;
+}
+
+.draft-list-form {
+  margin: 0;
+}
+
+.draft-template-picker {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e6edf5;
+  background: #f8fbff;
+}
+
+.draft-template-picker label {
+  margin: 0;
+  color: #26364c;
+  font-weight: 750;
+}
+
+.draft-template-picker .form-select {
+  min-height: 42px;
+  border-color: #c9d5e5;
+}
+
+.draft-template-picker .form-select:focus {
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 0.2rem rgba(47, 111, 237, 0.16);
 }
 
 .draft-company-list {
@@ -274,15 +348,29 @@ body {
 }
 
 .draft-created-row {
-  grid-template-columns: minmax(0, 1fr) minmax(132px, auto);
+  grid-template-columns: minmax(0, 1fr) minmax(156px, auto);
+}
+
+.draft-created-meta {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  min-width: 0;
 }
 
 .draft-created-time {
-  justify-self: end;
   color: #50627a;
   font-size: 0.9rem;
   font-weight: 750;
   white-space: nowrap;
+}
+
+.draft-created-meta span {
+  max-width: 220px;
+  color: #64748b;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .company-list-heading .company-kicker {
@@ -760,9 +848,26 @@ body {
   .draft-created-time {
     justify-self: start;
   }
+
+  .draft-created-meta {
+    justify-items: start;
+  }
+
+  .draft-created-meta span {
+    text-align: left;
+  }
 }
 
 @media (max-width: 840px) {
+  .draft-control-panel {
+    justify-content: stretch;
+  }
+
+  .draft-gmail-status,
+  .draft-connect-button {
+    width: 100%;
+  }
+
   .draft-split-list {
     grid-template-columns: 1fr;
   }
@@ -780,6 +885,11 @@ body {
   }
 
   .draft-company-row {
+    padding: 16px 18px;
+  }
+
+  .draft-template-picker {
+    grid-template-columns: 1fr;
     padding: 16px 18px;
   }
 }

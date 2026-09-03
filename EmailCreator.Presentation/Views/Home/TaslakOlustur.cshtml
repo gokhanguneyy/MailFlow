@@ -26,6 +26,27 @@
             </div>
         }
 
+        <div class="draft-control-panel">
+            <div class="draft-gmail-status">
+                @if (!Model.IsGmailConfigured)
+                {
+                    <span class="draft-status-badge draft-status-warning">Gmail ayarı eksik</span>
+                }
+                else if (Model.IsGmailConnected)
+                {
+                    <span class="draft-status-badge draft-status-ready">Gmail bağlı</span>
+                }
+                else
+                {
+                    <a asp-action="GmailBaglan"
+                       asp-route-mailTemplateId="@Model.SelectedMailTemplateId"
+                       class="btn btn-primary draft-connect-button">
+                        Gmail'e Bağlan
+                    </a>
+                }
+            </div>
+        </div>
+
         <section class="draft-split-list" aria-label="Taslak oluşturma listesi">
             <div class="draft-list-column">
                 <div class="draft-list-heading">
@@ -36,8 +57,33 @@
                     <span class="record-count">@Model.AvailableCompanies.Count kayıt</span>
                 </div>
 
-                @if (Model.HasAvailableCompanies)
-                {
+                <form asp-action="TaslakOlustur" method="post" class="draft-list-form">
+                    @Html.AntiForgeryToken()
+
+                    <div class="draft-template-picker">
+                        <label for="mailTemplateId">Mail Şablonu</label>
+                        <select id="mailTemplateId"
+                                name="mailTemplateId"
+                                class="form-select"
+                                disabled="@(!Model.HasMailTemplates)">
+                            @if (Model.HasMailTemplates)
+                            {
+                                @foreach (var template in Model.MailTemplates)
+                                {
+                                    <option value="@template.Id" selected="@(template.Id == Model.SelectedMailTemplateId)">
+                                        @template.Title
+                                    </option>
+                                }
+                            }
+                            else
+                            {
+                                <option value="">Kayıtlı mail şablonu yok</option>
+                            }
+                        </select>
+                    </div>
+
+                    @if (Model.HasAvailableCompanies)
+                    {
                     <ul class="draft-company-list">
                         @foreach (var company in Model.AvailableCompanies)
                         {
@@ -47,21 +93,22 @@
                                     <span>@company.CompanyEmail</span>
                                     <a href="@company.LinkedInUrl" target="_blank" rel="noreferrer">@company.Domain</a>
                                 </div>
-                                <form asp-action="TaslakOlustur" method="post" class="draft-create-form">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="domain" value="@company.Domain" />
-                                    <button type="submit" class="btn btn-primary draft-button">
-                                        Taslak Oluştur
-                                    </button>
-                                </form>
+                                <button type="submit"
+                                        name="domain"
+                                        value="@company.Domain"
+                                        class="btn btn-primary draft-button"
+                                        disabled="@(!Model.IsGmailConfigured || !Model.IsGmailConnected || !Model.HasMailTemplates)">
+                                    Taslak Oluştur
+                                </button>
                             </li>
                         }
                     </ul>
-                }
-                else
-                {
-                    <div class="empty-company-list">Taslağa alınacak şirket yok.</div>
-                }
+                    }
+                    else
+                    {
+                        <div class="empty-company-list">Taslağa alınacak şirket yok.</div>
+                    }
+                </form>
             </div>
 
             <div class="draft-list-column draft-created-column">
@@ -82,9 +129,13 @@
                                 <div class="draft-company-info">
                                     <strong>@draft.CompanyName</strong>
                                     <span>@draft.CompanyEmail</span>
+                                    <span>@draft.MailSubject</span>
                                     <a href="@draft.LinkedInUrl" target="_blank" rel="noreferrer">@draft.Domain</a>
                                 </div>
-                                <time class="draft-created-time">@draft.DraftCreatedAt</time>
+                                <div class="draft-created-meta">
+                                    <time class="draft-created-time">@draft.DraftCreatedAt</time>
+                                    <span>@draft.GmailDraftId</span>
+                                </div>
                             </li>
                         }
                     </ul>

@@ -1,6 +1,10 @@
 using FluentValidation;
+using Google.Apis.Auth.AspNetCore3;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using EmailCreator.Business;
 using EmailCreator.Models;
+using EmailCreator.Options;
+using EmailCreator.Services;
 using EmailCreator.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,9 +18,40 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddScoped<IValidator<CompanyProfileViewModel>, CompanyProfileViewModelValidator>();
 builder.Services.AddScoped<IValidator<MailTemplateViewModel>, MailTemplateViewModelValidator>();
 builder.Services.AddScoped<IValidator<MailTemplateUpdateViewModel>, MailTemplateUpdateViewModelValidator>();
+builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection("Google"));
+builder.Services.AddScoped<IGmailDraftService, GmailDraftService>();
 builder.Services.AddEmailCreatorBusiness(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("DefaultConnection connection string is missing."));
+
+var googleAuthOptions = builder.Configuration
+    .GetSection("Google")
+    .Get<GoogleAuthOptions>() ?? new GoogleAuthOptions();
+
+if (googleAuthOptions.IsConfigured)
+{
+    builder.Services
+        .AddAuthentication(options =>
+        {
+            options.DefaultChallengeScheme = GoogleOpenIdConnectDefaults.AuthenticationScheme;
+            options.DefaultForbidScheme = GoogleOpenIdConnectDefaults.AuthenticationScheme;
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        })
+        .AddCookie()
+        .AddGoogleOpenIdConnect(options =>
+        {
+            options.ClientId = googleAuthOptions.ClientId!;
+            options.ClientSecret = googleAuthOptions.ClientSecret!;
+        });
+}
+else
+{
+    builder.Services
+        .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        .AddCookie();
+}
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -35,6 +70,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

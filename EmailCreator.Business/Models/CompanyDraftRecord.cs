@@ -7,4 +7,9 @@ public sealed record CompanyDraftRecord(
     string CompanyEmail,
     string Domain,
     DateTimeOffset CompanyCreatedAt,
+    int MailTemplateId,
+    string MailSubject,
+    string MailBody,
+    string GmailDraftId,
+    string GmailMessageId,
     DateTimeOffset DraftCreatedAt);

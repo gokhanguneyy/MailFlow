@@ -118,6 +118,24 @@ public class EmailCreatorDbContext : DbContext
             entity.Property(draft => draft.CompanyCreatedAt)
                 .IsRequired();
 
+            entity.Property(draft => draft.MailTemplateId)
+                .IsRequired();
+
+            entity.Property(draft => draft.MailSubject)
+                .HasMaxLength(300)
+                .IsRequired();
+
+            entity.Property(draft => draft.MailBody)
+                .IsRequired();
+
+            entity.Property(draft => draft.GmailDraftId)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(draft => draft.GmailMessageId)
+                .HasMaxLength(200)
+                .IsRequired();
+
             entity.Property(draft => draft.DraftCreatedAt)
                 .IsRequired();
 
@@ -125,6 +143,8 @@ public class EmailCreatorDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(draft => draft.DraftCreatedAt);
+            entity.HasIndex(draft => draft.GmailDraftId);
+            entity.HasIndex(draft => draft.MailTemplateId);
         });
     }
 }

@@ -1,13 +1,21 @@
 using System.Diagnostics;
 using System.Net.Mail;
+using System.Security.Claims;
 using FluentValidation;
+using Google;
+using Google.Apis.Auth.AspNetCore3;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Gmail.v1;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using EmailCreator.Business.Abstract;
 using EmailCreator.Business.Exceptions;
 using EmailCreator.Business.Models;
 using EmailCreator.Models;
+using EmailCreator.Options;
+using EmailCreator.Services;
 
 namespace EmailCreator.Controllers;
 
@@ -15,6 +23,8 @@ public class HomeController : Controller
 {
     private readonly ICompanyRecordService _companyRecordService;
     private readonly ICompanyDraftService _companyDraftService;
+    private readonly IGmailDraftService _gmailDraftService;
+    private readonly GoogleAuthOptions _googleAuthOptions;
     private readonly IValidator<CompanyProfileViewModel> _companyProfileValidator;
     private readonly IMailTemplateService _mailTemplateService;
     private readonly IValidator<MailTemplateViewModel> _mailTemplateValidator;
@@ -24,6 +34,8 @@ public class HomeController : Controller
     public HomeController(
         ICompanyRecordService companyRecordService,
         ICompanyDraftService companyDraftService,
+        IGmailDraftService gmailDraftService,
+        IOptions<GoogleAuthOptions> googleAuthOptions,
         IValidator<CompanyProfileViewModel> companyProfileValidator,
         IMailTemplateService mailTemplateService,
         IValidator<MailTemplateViewModel> mailTemplateValidator,
@@ -32,6 +44,8 @@ public class HomeController : Controller
     {
         _companyRecordService = companyRecordService;
         _companyDraftService = companyDraftService;
+        _gmailDraftService = gmailDraftService;
+        _googleAuthOptions = googleAuthOptions.Value;
         _companyProfileValidator = companyProfileValidator;
         _mailTemplateService = mailTemplateService;
         _mailTemplateValidator = mailTemplateValidator;
@@ -100,38 +114,134 @@ public class HomeController : Controller
         return RedirectToAction(nameof(Index), new { searchEmail });
     }
 
-    public async Task<IActionResult> TaslakOlustur()
+    public async Task<IActionResult> TaslakOlustur(int? mailTemplateId)
     {
         return View(await BuildCompanyDraftViewModelAsync(new CompanyDraftWorkspaceViewModel
         {
+            SelectedMailTemplateId = mailTemplateId,
             SuccessMessage = TempData["CompanyDraftSuccessMessage"] as string,
             ErrorMessage = TempData["CompanyDraftErrorMessage"] as string
         }));
     }
 
+    [GoogleScopedAuthorize(GmailService.ScopeConstants.GmailCompose)]
+    public IActionResult GmailBaglan(int? mailTemplateId)
+    {
+        TempData["CompanyDraftSuccessMessage"] = "Gmail bağlantısı hazır.";
+
+        return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> TaslakOlustur(string domain)
+    public async Task<IActionResult> TaslakOlustur(string domain, int? mailTemplateId)
     {
         if (string.IsNullOrWhiteSpace(domain))
         {
             TempData["CompanyDraftErrorMessage"] = "Taslak oluşturulacak firma bulunamadı.";
 
-            return RedirectToAction(nameof(TaslakOlustur));
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
         }
 
-        var draft = await _companyDraftService.CreateAsync(domain);
+        if (!mailTemplateId.HasValue)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Gmail taslağı için önce bir mail şablonu seçin.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        if (!_googleAuthOptions.IsConfigured)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Gmail taslağı oluşturmak için Google OAuth bilgileri ayarlanmalı.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Gmail taslağı oluşturmak için önce Gmail hesabına bağlanın.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        var company = await _companyDraftService.GetAvailableCompanyAsync(domain);
+        if (company is null)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Taslak oluşturulacak firma bulunamadı.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        var mailTemplate = await _mailTemplateService.GetByIdAsync(mailTemplateId.Value);
+        if (mailTemplate is null)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Gmail taslağı için seçilen mail şablonu bulunamadı.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        var authProvider = HttpContext.RequestServices.GetService(typeof(IGoogleAuthProvider)) as IGoogleAuthProvider;
+        if (authProvider is null)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Gmail bağlantısı hazır değil. Google OAuth ayarlarını kontrol edin.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        GoogleCredential credential;
+        try
+        {
+            credential = await authProvider.GetCredentialAsync();
+        }
+        catch
+        {
+            TempData["CompanyDraftErrorMessage"] = "Gmail yetkisi alınamadı. Gmail hesabına tekrar bağlanın.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        GmailDraftCreationResult gmailDraft;
+        try
+        {
+            gmailDraft = await _gmailDraftService.CreateAsync(
+                company,
+                mailTemplate,
+                credential,
+                User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email"),
+                HttpContext.RequestAborted);
+        }
+        catch (GoogleApiException)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Gmail taslağı oluşturulamadı. Gmail API iznini ve hesabı kontrol edin.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        if (string.IsNullOrWhiteSpace(gmailDraft.DraftId))
+        {
+            TempData["CompanyDraftErrorMessage"] = "Gmail taslağı oluşturuldu ama Gmail taslak kimliği alınamadı.";
+
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
+        }
+
+        var draft = await _companyDraftService.CreateAsync(
+            domain,
+            mailTemplate.Id,
+            mailTemplate.Subject,
+            mailTemplate.Body,
+            gmailDraft.DraftId,
+            gmailDraft.MessageId);
 
         if (draft is null)
         {
             TempData["CompanyDraftErrorMessage"] = "Taslak oluşturulacak firma bulunamadı.";
 
-            return RedirectToAction(nameof(TaslakOlustur));
+            return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
         }
 
-        TempData["CompanyDraftSuccessMessage"] = $"{draft.CompanyName} taslak listesine alındı.";
+        TempData["CompanyDraftSuccessMessage"] = $"{draft.CompanyName} için Gmail taslağı oluşturuldu.";
 
-        return RedirectToAction(nameof(TaslakOlustur));
+        return RedirectToAction(nameof(TaslakOlustur), new { mailTemplateId });
     }
 
     public async Task<IActionResult> MailSablonu()
@@ -317,14 +427,33 @@ public class HomeController : Controller
     {
         var availableCompanies = await _companyDraftService.GetAvailableCompaniesAsync();
         var createdDrafts = await _companyDraftService.GetAllAsync();
+        var mailTemplates = await _mailTemplateService.GetAllAsync();
 
         model.AvailableCompanies = availableCompanies
             .Select(ToListItem)
             .ToList();
 
+        model.MailTemplates = mailTemplates
+            .Select(template => new CompanyDraftMailTemplateOptionViewModel
+            {
+                Id = template.Id,
+                Title = template.Title
+            })
+            .ToList();
+
+        if (model.HasMailTemplates
+            && (!model.SelectedMailTemplateId.HasValue
+                || model.MailTemplates.All(template => template.Id != model.SelectedMailTemplateId.Value)))
+        {
+            model.SelectedMailTemplateId = model.MailTemplates[0].Id;
+        }
+
         model.CreatedDrafts = createdDrafts
             .Select(ToCompanyDraftListItem)
             .ToList();
+
+        model.IsGmailConfigured = _googleAuthOptions.IsConfigured;
+        model.IsGmailConnected = User.Identity?.IsAuthenticated == true;
 
         return model;
     }
@@ -362,6 +491,8 @@ public class HomeController : Controller
             CompanyEmail = record.CompanyEmail,
             Domain = record.Domain,
             CompanyCreatedAt = record.CompanyCreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
+            MailSubject = record.MailSubject,
+            GmailDraftId = record.GmailDraftId,
             DraftCreatedAt = record.DraftCreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
         };
     }

@@ -85,10 +85,32 @@ partial class EmailCreatorDbContextModelSnapshot : ModelSnapshot
             entity.Property<DateTimeOffset>("DraftCreatedAt")
                 .HasColumnType("datetimeoffset");
 
+            entity.Property<string>("GmailDraftId")
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnType("nvarchar(200)");
+
+            entity.Property<string>("GmailMessageId")
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnType("nvarchar(200)");
+
             entity.Property<string>("LinkedInUrl")
                 .IsRequired()
                 .HasMaxLength(500)
                 .HasColumnType("nvarchar(500)");
+
+            entity.Property<string>("MailBody")
+                .IsRequired()
+                .HasColumnType("nvarchar(max)");
+
+            entity.Property<string>("MailSubject")
+                .IsRequired()
+                .HasMaxLength(300)
+                .HasColumnType("nvarchar(300)");
+
+            entity.Property<int>("MailTemplateId")
+                .HasColumnType("int");
 
             entity.HasKey("Id");
 
@@ -96,6 +118,10 @@ partial class EmailCreatorDbContextModelSnapshot : ModelSnapshot
                 .IsUnique();
 
             entity.HasIndex("DraftCreatedAt");
+
+            entity.HasIndex("GmailDraftId");
+
+            entity.HasIndex("MailTemplateId");
 
             entity.ToTable("CompanyDrafts");
         });

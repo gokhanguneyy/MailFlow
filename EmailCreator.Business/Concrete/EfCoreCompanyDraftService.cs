@@ -19,7 +19,13 @@ public sealed class EfCoreCompanyDraftService : ICompanyDraftService
         _companyDraftRepository = companyDraftRepository;
     }
 
-    public async Task<CompanyDraftRecord?> CreateAsync(string domain)
+    public async Task<CompanyDraftRecord?> CreateAsync(
+        string domain,
+        int mailTemplateId,
+        string mailSubject,
+        string mailBody,
+        string gmailDraftId,
+        string gmailMessageId)
     {
         var normalizedDomain = NormalizeDomain(domain);
 
@@ -46,6 +52,11 @@ public sealed class EfCoreCompanyDraftService : ICompanyDraftService
             LinkedInUrl = company.LinkedInUrl,
             CompanyEmail = company.CompanyEmail,
             CompanyCreatedAt = company.CreatedAt,
+            MailTemplateId = mailTemplateId,
+            MailSubject = mailSubject.Trim(),
+            MailBody = mailBody.Trim(),
+            GmailDraftId = gmailDraftId,
+            GmailMessageId = gmailMessageId,
             DraftCreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -69,6 +80,24 @@ public sealed class EfCoreCompanyDraftService : ICompanyDraftService
         }
 
         return ToDraftRecord(draft);
+    }
+
+    public async Task<CompanyRecord?> GetAvailableCompanyAsync(string domain)
+    {
+        var normalizedDomain = NormalizeDomain(domain);
+
+        var existingDraft = await _companyDraftRepository.FirstOrDefaultAsync(
+            draft => draft.Domain == normalizedDomain);
+
+        if (existingDraft is not null)
+        {
+            return null;
+        }
+
+        var company = await _companyRepository.FirstOrDefaultAsync(
+            company => company.Domain == normalizedDomain);
+
+        return company is null ? null : ToCompanyRecord(company);
     }
 
     public async Task<IReadOnlyList<CompanyRecord>> GetAvailableCompaniesAsync()
@@ -121,6 +150,11 @@ public sealed class EfCoreCompanyDraftService : ICompanyDraftService
             draft.CompanyEmail,
             draft.Domain,
             draft.CompanyCreatedAt,
+            draft.MailTemplateId,
+            draft.MailSubject,
+            draft.MailBody,
+            draft.GmailDraftId,
+            draft.GmailMessageId,
             draft.DraftCreatedAt);
     }
 

@@ -14,5 +14,15 @@ public class CompanyDraft
 
     public DateTimeOffset CompanyCreatedAt { get; set; }
 
+    public int MailTemplateId { get; set; }
+
+    public string MailSubject { get; set; } = string.Empty;
+
+    public string MailBody { get; set; } = string.Empty;
+
+    public string GmailDraftId { get; set; } = string.Empty;
+
+    public string GmailMessageId { get; set; } = string.Empty;
+
     public DateTimeOffset DraftCreatedAt { get; set; }
 }
