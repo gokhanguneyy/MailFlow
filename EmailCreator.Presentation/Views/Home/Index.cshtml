@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Firma Bilgileri";
+    ViewData["UseFluidContainer"] = true;
 }
 
 <section class="company-page">
@@ -82,16 +83,16 @@
                             @foreach (var company in Model.SavedCompanies)
                             {
                                 <tr>
-                                    <td class="company-name-cell">@company.CompanyName</td>
-                                    <td>
+                                    <td class="company-name-cell" data-label="Firma Adı">@company.CompanyName</td>
+                                    <td data-label="LinkedIn">
                                         <a href="@company.LinkedInUrl" target="_blank" rel="noreferrer">
                                             @company.LinkedInUrl
                                         </a>
                                     </td>
-                                    <td>@company.CompanyEmail</td>
-                                    <td>@company.Domain</td>
-                                    <td>@company.CreatedAt</td>
-                                    <td class="company-actions-cell">
+                                    <td data-label="Mail">@company.CompanyEmail</td>
+                                    <td data-label="Domain">@company.Domain</td>
+                                    <td data-label="Kayıt Tarihi">@company.CreatedAt</td>
+                                    <td class="company-actions-cell" data-label="İşlem">
                                         <button type="button" class="btn btn-outline-primary draft-button" data-draft-button>
                                             Taslak Oluştur
                                         </button>

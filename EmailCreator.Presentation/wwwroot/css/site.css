@@ -30,7 +30,7 @@ body {
 
 .app-container-fluid {
   --bs-gutter-x: 1rem;
-  max-width: 1280px;
+  max-width: 1440px;
 }
 
 .company-page {
@@ -44,7 +44,7 @@ body {
 }
 
 .company-shell {
-  width: min(1040px, 100%);
+  width: min(1320px, 100%);
   margin: 0 auto;
 }
 
@@ -252,15 +252,45 @@ body {
 }
 
 .company-table-wrap {
-  overflow-x: auto;
+  overflow-x: visible;
 }
 
 .company-table {
   width: 100%;
-  min-width: 1040px;
+  min-width: 0;
   margin: 0;
   border-collapse: collapse;
   table-layout: fixed;
+}
+
+.company-table th:nth-child(1),
+.company-table td:nth-child(1) {
+  width: 17%;
+}
+
+.company-table th:nth-child(2),
+.company-table td:nth-child(2) {
+  width: 22%;
+}
+
+.company-table th:nth-child(3),
+.company-table td:nth-child(3) {
+  width: 17%;
+}
+
+.company-table th:nth-child(4),
+.company-table td:nth-child(4) {
+  width: 16%;
+}
+
+.company-table th:nth-child(5),
+.company-table td:nth-child(5) {
+  width: 12%;
+}
+
+.company-table th:nth-child(6),
+.company-table td:nth-child(6) {
+  width: 16%;
 }
 
 .mail-template-table {
@@ -340,6 +370,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .mail-template-actions-cell {
@@ -421,6 +452,67 @@ body {
 
 .modal-body .form-field + .form-field {
   margin-top: 16px;
+}
+
+@media (max-width: 1080px) {
+  .company-table:not(.mail-template-table) thead {
+    display: none;
+  }
+
+  .company-table:not(.mail-template-table),
+  .company-table:not(.mail-template-table) tbody,
+  .company-table:not(.mail-template-table) tr,
+  .company-table:not(.mail-template-table) td {
+    display: block;
+    width: 100% !important;
+  }
+
+  .company-table:not(.mail-template-table) tr {
+    border-bottom: 1px solid #e6edf5;
+    padding: 12px 0;
+  }
+
+  .company-table:not(.mail-template-table) tr:last-child {
+    border-bottom: 0;
+  }
+
+  .company-table:not(.mail-template-table) td {
+    display: grid;
+    grid-template-columns: minmax(118px, 30%) minmax(0, 1fr);
+    gap: 12px;
+    border-bottom: 0;
+    padding: 9px 16px;
+  }
+
+  .company-table:not(.mail-template-table) td::before {
+    content: attr(data-label);
+    color: #50627a;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .company-table:not(.mail-template-table) .company-actions-cell {
+    display: flex !important;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .company-table:not(.mail-template-table) .company-actions-cell::before {
+    flex: 0 0 100%;
+  }
+
+  .company-table:not(.mail-template-table) .draft-button {
+    flex: 1 1 160px;
+  }
+
+  .company-table:not(.mail-template-table) .delete-company-form {
+    flex: 1 1 72px;
+  }
+
+  .company-table:not(.mail-template-table) .delete-button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 840px) {
