@@ -14,6 +14,7 @@ namespace EmailCreator.Controllers;
 public class HomeController : Controller
 {
     private readonly ICompanyRecordService _companyRecordService;
+    private readonly ICompanyDraftService _companyDraftService;
     private readonly IValidator<CompanyProfileViewModel> _companyProfileValidator;
     private readonly IMailTemplateService _mailTemplateService;
     private readonly IValidator<MailTemplateViewModel> _mailTemplateValidator;
@@ -22,6 +23,7 @@ public class HomeController : Controller
 
     public HomeController(
         ICompanyRecordService companyRecordService,
+        ICompanyDraftService companyDraftService,
         IValidator<CompanyProfileViewModel> companyProfileValidator,
         IMailTemplateService mailTemplateService,
         IValidator<MailTemplateViewModel> mailTemplateValidator,
@@ -29,6 +31,7 @@ public class HomeController : Controller
         IWebHostEnvironment webHostEnvironment)
     {
         _companyRecordService = companyRecordService;
+        _companyDraftService = companyDraftService;
         _companyProfileValidator = companyProfileValidator;
         _mailTemplateService = mailTemplateService;
         _mailTemplateValidator = mailTemplateValidator;
@@ -95,6 +98,40 @@ public class HomeController : Controller
         await _companyRecordService.DeleteAsync(domain);
 
         return RedirectToAction(nameof(Index), new { searchEmail });
+    }
+
+    public async Task<IActionResult> TaslakOlustur()
+    {
+        return View(await BuildCompanyDraftViewModelAsync(new CompanyDraftWorkspaceViewModel
+        {
+            SuccessMessage = TempData["CompanyDraftSuccessMessage"] as string,
+            ErrorMessage = TempData["CompanyDraftErrorMessage"] as string
+        }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TaslakOlustur(string domain)
+    {
+        if (string.IsNullOrWhiteSpace(domain))
+        {
+            TempData["CompanyDraftErrorMessage"] = "Taslak oluşturulacak firma bulunamadı.";
+
+            return RedirectToAction(nameof(TaslakOlustur));
+        }
+
+        var draft = await _companyDraftService.CreateAsync(domain);
+
+        if (draft is null)
+        {
+            TempData["CompanyDraftErrorMessage"] = "Taslak oluşturulacak firma bulunamadı.";
+
+            return RedirectToAction(nameof(TaslakOlustur));
+        }
+
+        TempData["CompanyDraftSuccessMessage"] = $"{draft.CompanyName} taslak listesine alındı.";
+
+        return RedirectToAction(nameof(TaslakOlustur));
     }
 
     public async Task<IActionResult> MailSablonu()
@@ -276,6 +313,22 @@ public class HomeController : Controller
         return model;
     }
 
+    private async Task<CompanyDraftWorkspaceViewModel> BuildCompanyDraftViewModelAsync(CompanyDraftWorkspaceViewModel model)
+    {
+        var availableCompanies = await _companyDraftService.GetAvailableCompaniesAsync();
+        var createdDrafts = await _companyDraftService.GetAllAsync();
+
+        model.AvailableCompanies = availableCompanies
+            .Select(ToListItem)
+            .ToList();
+
+        model.CreatedDrafts = createdDrafts
+            .Select(ToCompanyDraftListItem)
+            .ToList();
+
+        return model;
+    }
+
     private async Task<MailTemplateViewModel> BuildMailTemplateViewModelAsync(MailTemplateViewModel model)
     {
         var mailTemplates = await _mailTemplateService.GetAllAsync();
@@ -296,6 +349,20 @@ public class HomeController : Controller
             CompanyEmail = record.CompanyEmail,
             Domain = record.Domain,
             CreatedAt = record.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+        };
+    }
+
+    private static CompanyDraftListItemViewModel ToCompanyDraftListItem(CompanyDraftRecord record)
+    {
+        return new CompanyDraftListItemViewModel
+        {
+            Id = record.Id,
+            CompanyName = record.CompanyName,
+            LinkedInUrl = record.LinkedInUrl,
+            CompanyEmail = record.CompanyEmail,
+            Domain = record.Domain,
+            CompanyCreatedAt = record.CompanyCreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
+            DraftCreatedAt = record.DraftCreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
         };
     }
 

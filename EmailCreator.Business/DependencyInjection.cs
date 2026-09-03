@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IGenericRepository<>), typeof(EfCoreGenericRepository<>));
         services.AddScoped<ICompanyFactory, CompanyFactory>();
         services.AddScoped<ICompanyRecordService, EfCoreCompanyRecordService>();
+        services.AddScoped<ICompanyDraftService, EfCoreCompanyDraftService>();
         services.AddScoped<IMailTemplateService, EfCoreMailTemplateService>();
 
         return services;

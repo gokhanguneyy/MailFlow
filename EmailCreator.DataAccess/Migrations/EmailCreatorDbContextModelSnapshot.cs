@@ -57,6 +57,49 @@ partial class EmailCreatorDbContextModelSnapshot : ModelSnapshot
             entity.ToTable("Companies");
         });
 
+        modelBuilder.Entity("EmailCreator.Entities.CompanyDraft", entity =>
+        {
+            entity.Property<int>("Id")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("int")
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            entity.Property<string>("CompanyEmail")
+                .IsRequired()
+                .HasMaxLength(320)
+                .HasColumnType("nvarchar(320)");
+
+            entity.Property<DateTimeOffset>("CompanyCreatedAt")
+                .HasColumnType("datetimeoffset");
+
+            entity.Property<string>("CompanyName")
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnType("nvarchar(200)");
+
+            entity.Property<string>("Domain")
+                .IsRequired()
+                .HasMaxLength(255)
+                .HasColumnType("nvarchar(255)");
+
+            entity.Property<DateTimeOffset>("DraftCreatedAt")
+                .HasColumnType("datetimeoffset");
+
+            entity.Property<string>("LinkedInUrl")
+                .IsRequired()
+                .HasMaxLength(500)
+                .HasColumnType("nvarchar(500)");
+
+            entity.HasKey("Id");
+
+            entity.HasIndex("Domain")
+                .IsUnique();
+
+            entity.HasIndex("DraftCreatedAt");
+
+            entity.ToTable("CompanyDrafts");
+        });
+
         modelBuilder.Entity("EmailCreator.Entities.MailTemplate", entity =>
         {
             entity.Property<int>("Id")

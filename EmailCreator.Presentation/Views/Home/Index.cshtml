@@ -93,9 +93,6 @@
                                     <td data-label="Domain">@company.Domain</td>
                                     <td data-label="Kayıt Tarihi">@company.CreatedAt</td>
                                     <td class="company-actions-cell" data-label="İşlem">
-                                        <button type="button" class="btn btn-outline-primary draft-button" data-draft-button>
-                                            Taslak Oluştur
-                                        </button>
                                         <form asp-action="Delete" method="post" class="delete-company-form">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="domain" value="@company.Domain" />
@@ -123,13 +120,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        // Taslak butonu her kayit satirinda tekrarlandigi icin tum butonlara click eventi bagliyoruz.
-        // Simdilik is kuralina gitmez; sadece kullaniciya gecici popup mesaji gosterir.
-        document.querySelectorAll("[data-draft-button]").forEach((button) => {
-            button.addEventListener("click", () => {
-                alert("Hoş geldiniz");
-            });
-        });
-    </script>
 }

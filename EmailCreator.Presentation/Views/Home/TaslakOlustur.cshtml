@@ -1,0 +1,99 @@
+@model CompanyDraftWorkspaceViewModel
+
+@{
+    ViewData["Title"] = "Taslak Oluştur";
+    ViewData["UseFluidContainer"] = true;
+}
+
+<section class="draft-page">
+    <div class="company-shell">
+        <div class="company-header">
+            <p class="company-kicker">Taslak</p>
+            <h1>Taslak Oluştur</h1>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+        {
+            <div class="alert alert-success mail-template-alert" role="alert">
+                @Model.SuccessMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger mail-template-alert" role="alert">
+                @Model.ErrorMessage
+            </div>
+        }
+
+        <section class="draft-split-list" aria-label="Taslak oluşturma listesi">
+            <div class="draft-list-column">
+                <div class="draft-list-heading">
+                    <div>
+                        <p class="company-kicker">Sol Liste</p>
+                        <h2>Kayıtlı Şirketler</h2>
+                    </div>
+                    <span class="record-count">@Model.AvailableCompanies.Count kayıt</span>
+                </div>
+
+                @if (Model.HasAvailableCompanies)
+                {
+                    <ul class="draft-company-list">
+                        @foreach (var company in Model.AvailableCompanies)
+                        {
+                            <li class="draft-company-row">
+                                <div class="draft-company-info">
+                                    <strong>@company.CompanyName</strong>
+                                    <span>@company.CompanyEmail</span>
+                                    <a href="@company.LinkedInUrl" target="_blank" rel="noreferrer">@company.Domain</a>
+                                </div>
+                                <form asp-action="TaslakOlustur" method="post" class="draft-create-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="domain" value="@company.Domain" />
+                                    <button type="submit" class="btn btn-primary draft-button">
+                                        Taslak Oluştur
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="empty-company-list">Taslağa alınacak şirket yok.</div>
+                }
+            </div>
+
+            <div class="draft-list-column draft-created-column">
+                <div class="draft-list-heading">
+                    <div>
+                        <p class="company-kicker">Sağ Liste</p>
+                        <h2>Taslak Oluşturulanlar</h2>
+                    </div>
+                    <span class="record-count">@Model.CreatedDrafts.Count kayıt</span>
+                </div>
+
+                @if (Model.HasCreatedDrafts)
+                {
+                    <ul class="draft-company-list">
+                        @foreach (var draft in Model.CreatedDrafts)
+                        {
+                            <li class="draft-company-row draft-created-row">
+                                <div class="draft-company-info">
+                                    <strong>@draft.CompanyName</strong>
+                                    <span>@draft.CompanyEmail</span>
+                                    <a href="@draft.LinkedInUrl" target="_blank" rel="noreferrer">@draft.Domain</a>
+                                </div>
+                                <time class="draft-created-time">@draft.DraftCreatedAt</time>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="empty-company-list">Henüz taslak oluşturulmadı.</div>
+                }
+            </div>
+        </section>
+    </div>
+</section>

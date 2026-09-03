@@ -12,6 +12,8 @@ public class EmailCreatorDbContext : DbContext
 
     public DbSet<Company> Companies => Set<Company>();
 
+    public DbSet<CompanyDraft> CompanyDrafts => Set<CompanyDraft>();
+
     public DbSet<MailTemplate> MailTemplates => Set<MailTemplate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -89,6 +91,40 @@ public class EmailCreatorDbContext : DbContext
 
             entity.HasIndex(document => document.Title);
             entity.HasIndex(document => document.CreatedAt);
+        });
+
+        modelBuilder.Entity<CompanyDraft>(entity =>
+        {
+            entity.ToTable("CompanyDrafts");
+
+            entity.HasKey(draft => draft.Id);
+
+            entity.Property(draft => draft.Domain)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(draft => draft.CompanyName)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(draft => draft.LinkedInUrl)
+                .HasMaxLength(500)
+                .IsRequired();
+
+            entity.Property(draft => draft.CompanyEmail)
+                .HasMaxLength(320)
+                .IsRequired();
+
+            entity.Property(draft => draft.CompanyCreatedAt)
+                .IsRequired();
+
+            entity.Property(draft => draft.DraftCreatedAt)
+                .IsRequired();
+
+            entity.HasIndex(draft => draft.Domain)
+                .IsUnique();
+
+            entity.HasIndex(draft => draft.DraftCreatedAt);
         });
     }
 }
