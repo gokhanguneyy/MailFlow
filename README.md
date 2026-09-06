@@ -1,6 +1,6 @@
-# Email Creator
+# MailFlow
 
-Email Creator; firma bilgilerini ve e-posta şablonlarını tek yerde yöneterek, seçilen firmalar için Gmail üzerinde PDF ekli taslaklar oluşturan ASP.NET Core MVC uygulamasıdır.
+MailFlow; firma bilgilerini ve e-posta şablonlarını tek yerde yöneterek, seçilen firmalar için Gmail üzerinde PDF ekli taslaklar oluşturan ASP.NET Core MVC uygulamasıdır.
 
 > Uygulama e-postayı otomatik olarak göndermez. Hazırlanan ileti Gmail hesabının **Taslaklar** klasörüne kaydedilir ve gönderilmeden önce kullanıcı tarafından gözden geçirilebilir.
 
@@ -29,11 +29,11 @@ Email Creator; firma bilgilerini ve e-posta şablonlarını tek yerde yöneterek
 ## Proje Yapısı
 
 ```text
-EmailCreator.sln
-├── EmailCreator.Presentation/  # MVC arayüzü, doğrulamalar ve Gmail entegrasyonu
-├── EmailCreator.Business/      # İş kuralları, servisler ve modeller
-├── EmailCreator.DataAccess/    # EF Core DbContext, repository ve migration'lar
-└── EmailCreator.Entities/      # Veritabanı varlıkları
+MailFlow.sln
+├── MailFlow.Presentation/  # MVC arayüzü, doğrulamalar ve Gmail entegrasyonu
+├── MailFlow.Business/      # İş kuralları, servisler ve modeller
+├── MailFlow.DataAccess/    # EF Core DbContext, repository ve migration'lar
+└── MailFlow.Entities/      # Veritabanı varlıkları
 ```
 
 ## Gereksinimler
@@ -49,22 +49,22 @@ Gmail bağlantısı yapılandırılmadan firma ve şablon yönetimi kullanılabi
 Depoyu klonlayın ve proje dizinine geçin:
 
 ```bash
-git clone https://github.com/gokhanguneyy/E-mail-Creator.git
-cd "E-mail-Creator"
+git clone https://github.com/gokhanguneyy/MailFlow.git
+cd "MailFlow"
 ```
 
 Bağımlılıkları yükleyin:
 
 ```bash
-dotnet restore EmailCreator.sln
+dotnet restore MailFlow.sln
 ```
 
-`EmailCreator.Presentation/appsettings.json` içindeki `DefaultConnection` değerini kendi SQL Server ortamınıza göre düzenleyin. Varsayılan geliştirme bağlantısı şöyledir:
+`MailFlow.Presentation/appsettings.json` içindeki `DefaultConnection` değerini kendi SQL Server ortamınıza göre düzenleyin. Varsayılan geliştirme bağlantısı şöyledir:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=EmailCreatorDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=MailFlowDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
   }
 }
 ```
@@ -72,10 +72,10 @@ dotnet restore EmailCreator.sln
 Uygulamayı çalıştırın:
 
 ```bash
-dotnet run --project EmailCreator.Presentation
+dotnet run --project MailFlow.Presentation
 ```
 
-Ardından tarayıcıda `https://localhost:7122` adresini açın. İlk çalıştırmada mevcut EF Core migration'ları otomatik olarak uygulanır ve `EmailCreatorDb` veritabanı oluşturulur.
+Ardından tarayıcıda `https://localhost:7122` adresini açın. İlk çalıştırmada mevcut EF Core migration'ları otomatik olarak uygulanır ve `MailFlowDb` veritabanı oluşturulur.
 
 Yerel HTTPS sertifikası için gerekirse şu komutu çalıştırın:
 
@@ -98,8 +98,8 @@ https://localhost:7122/signin-google
 İstemci bilgilerini kaynak kontrolüne eklemeden .NET user-secrets ile kaydedin:
 
 ```bash
-dotnet user-secrets set "Google:ClientId" "GOOGLE_CLIENT_ID" --project EmailCreator.Presentation
-dotnet user-secrets set "Google:ClientSecret" "GOOGLE_CLIENT_SECRET" --project EmailCreator.Presentation
+dotnet user-secrets set "Google:ClientId" "GOOGLE_CLIENT_ID" --project MailFlow.Presentation
+dotnet user-secrets set "Google:ClientSecret" "GOOGLE_CLIENT_SECRET" --project MailFlow.Presentation
 ```
 
 Uygulamayı yeniden başlattığınızda **Taslak Oluştur** ekranındaki **Gmail'e Bağlan** düğmesi kullanılabilir hale gelir. Uygulama yalnızca taslak oluşturmak için gereken `gmail.compose` iznini ister.
@@ -122,11 +122,11 @@ Her firma alan adı için yalnızca bir taslak kaydı oluşturulur. Başarıyla 
 | `Google:ClientId` | Google OAuth istemci kimliği | Gmail entegrasyonu için |
 | `Google:ClientSecret` | Google OAuth istemci sırrı | Gmail entegrasyonu için |
 
-Yüklenen PDF dosyaları geliştirme ortamında `EmailCreator.Presentation/wwwroot/uploads/mail-sablonu` dizininde saklanır. Üretim ortamında OAuth sırlarını güvenli bir secret store içinde tutun; yüklenen belgeler için de erişim kontrollü kalıcı depolama kullanın.
+Yüklenen PDF dosyaları geliştirme ortamında `MailFlow.Presentation/wwwroot/uploads/mail-sablonu` dizininde saklanır. Üretim ortamında OAuth sırlarını güvenli bir secret store içinde tutun; yüklenen belgeler için de erişim kontrollü kalıcı depolama kullanın.
 
 ## Derleme
 
 ```bash
-dotnet build EmailCreator.sln
+dotnet build MailFlow.sln
 ```
 

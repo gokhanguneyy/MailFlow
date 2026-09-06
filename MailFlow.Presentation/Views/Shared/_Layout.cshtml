@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MailFlow</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MailFlow.Presentation.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid justify-content-start gap-3">
+                <a class="navbar-brand me-0" asp-area="" asp-controller="Home" asp-action="Index">MailFlow</a>
+                <a class="nav-link text-dark px-0" asp-area="" asp-controller="Home" asp-action="TaslakOlustur">Taslak Oluştur</a>
+                <a class="nav-link text-dark px-0" asp-area="" asp-controller="Home" asp-action="MailSablonu">Mail Şablonu</a>
+            </div>
+        </nav>
+    </header>
+    @{
+        var useFluidContainer = ViewData["UseFluidContainer"] is bool value && value;
+    }
+    <div class="@(useFluidContainer ? "container-fluid app-container-fluid" : "container")">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - MailFlow
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

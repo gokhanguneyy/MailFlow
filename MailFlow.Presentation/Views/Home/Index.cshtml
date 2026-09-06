@@ -1,0 +1,123 @@
+@model CompanyProfileViewModel
+
+@{
+    ViewData["Title"] = "Firma Bilgileri";
+    ViewData["UseFluidContainer"] = true;
+}
+
+<section class="company-page">
+    <div class="company-shell">
+        <div class="company-header">
+            <p class="company-kicker">MailFlow</p>
+            <h1>Firma Bilgileri</h1>
+        </div>
+
+        <div class="company-workspace">
+            <form asp-action="Index" method="post" class="company-form">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-field">
+                    <label asp-for="CompanyName">Firma Adı</label>
+                    <input asp-for="CompanyName" class="form-control" placeholder="Örn. Acme Teknoloji" />
+                    <span asp-validation-for="CompanyName" class="text-danger"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="LinkedInUrl">Firma LinkedIn Hesabı</label>
+                    <input asp-for="LinkedInUrl" class="form-control" placeholder="https://www.linkedin.com/company/acme" />
+                    <span asp-validation-for="LinkedInUrl" class="text-danger"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="CompanyEmail">Firma Maili</label>
+                    <input asp-for="CompanyEmail" class="form-control" type="email" placeholder="info@acme.com" />
+                    <span asp-validation-for="CompanyEmail" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary save-button">Kaydet</button>
+            </form>
+        </div>
+
+        <section class="company-list-panel">
+            <div class="company-list-heading">
+                <div>
+                    <p class="company-kicker">Kayıt Listesi</p>
+                    <h2>Kaydedilen Firmalar</h2>
+                </div>
+                <div class="company-list-tools">
+                    <form asp-action="Index" method="get" class="company-search-form">
+                        <label class="visually-hidden" for="SearchEmail">Mail domainine göre ara</label>
+                        <input id="SearchEmail"
+                               name="searchEmail"
+                               class="form-control"
+                               type="search"
+                               value="@Model.SearchEmail"
+                               placeholder="Mail veya domain ara" />
+                        <button type="submit" class="btn btn-primary search-button">Ara</button>
+                        @if (Model.IsSearchActive)
+                        {
+                            <a asp-action="Index" class="clear-search-link">Temizle</a>
+                        }
+                    </form>
+                    <span class="record-count">@Model.SavedCompanies.Count kayıt</span>
+                </div>
+            </div>
+
+            @if (Model.HasSavedCompanies)
+            {
+                <div class="company-table-wrap">
+                    <table class="company-table">
+                        <thead>
+                            <tr>
+                                <th>Firma Adı</th>
+                                <th>LinkedIn</th>
+                                <th>Mail</th>
+                                <th>Domain</th>
+                                <th>Kayıt Tarihi</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var company in Model.SavedCompanies)
+                            {
+                                <tr>
+                                    <td class="company-name-cell" data-label="Firma Adı">@company.CompanyName</td>
+                                    <td data-label="LinkedIn">
+                                        <a href="@company.LinkedInUrl" target="_blank" rel="noreferrer">
+                                            @company.LinkedInUrl
+                                        </a>
+                                    </td>
+                                    <td data-label="Mail">@company.CompanyEmail</td>
+                                    <td data-label="Domain">@company.Domain</td>
+                                    <td data-label="Kayıt Tarihi">@company.CreatedAt</td>
+                                    <td class="company-actions-cell" data-label="İşlem">
+                                        <form asp-action="Delete" method="post" class="delete-company-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="domain" value="@company.Domain" />
+                                            <input type="hidden" name="searchEmail" value="@Model.SearchEmail" />
+                                            <button type="submit" class="btn btn-outline-danger delete-button">
+                                                Sil
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-company-list">
+                    @(Model.IsSearchActive ? "Bu domain aramasıyla eşleşen kayıt yok." : "Henüz kaydedilmiş firma yok.")
+                </div>
+            }
+        </section>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
